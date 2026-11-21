@@ -38,11 +38,11 @@ Open http://localhost:5173 and sign in with a demo account (password **`Password
 
 | Role | E-mail |
 |---|---|
-| Employee | employee@itsm.demo (also priya@, rohan@) |
-| Technician | technician@itsm.demo (also vikram@, sneha@, kavya@, rahul@) |
-| Team Lead | teamlead@itsm.demo |
-| Administrator | admin@itsm.demo |
-| IT Manager | manager@itsm.demo |
+| Employee / Customer | employee@itsm.demo |
+| Technician / Support Engineer | technician@itsm.demo |
+| Administrator / IT Manager | admin@itsm.demo |
+
+Additional seeded accounts (same password): employees priya@, rohan@; technicians vikram@, sneha@, kavya@, rahul@; team lead teamlead@; IT manager manager@ (all `@itsm.demo`).
 
 ### Configuration (`backend/.env`)
 

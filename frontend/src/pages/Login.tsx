@@ -3,12 +3,9 @@ import { useAuth } from '../auth';
 import { ErrorAlert } from '../components/ui';
 
 const DEMO = [
-  { label: 'Employee', email: 'employee@itsm.demo' },
-  { label: 'Technician', email: 'technician@itsm.demo' },
-  { label: 'Team Lead', email: 'teamlead@itsm.demo' },
-  { label: 'Administrator', email: 'admin@itsm.demo' },
-  { label: 'IT Manager', email: 'manager@itsm.demo' },
-  { label: 'DB Technician', email: 'sneha@itsm.demo' },
+  { label: 'Employee / Customer', email: 'employee@itsm.demo' },
+  { label: 'Technician / Support Engineer', email: 'technician@itsm.demo' },
+  { label: 'Administrator / IT Manager', email: 'admin@itsm.demo' },
 ];
 
 export default function Login() {
@@ -85,7 +82,6 @@ export default function Login() {
                 {DEMO.map((d) => (
                   <button key={d.email} type="button" onClick={() => { setEmail(d.email); setPassword('Password@123'); }}>
                     <b>{d.label}</b>
-                    <br />
                     <span className="muted">{d.email}</span>
                   </button>
                 ))}
