@@ -8,6 +8,65 @@ const DEMO = [
   { label: 'Administrator / IT Manager', email: 'admin@itsm.demo' },
 ];
 
+const MODULES = [
+  { icon: '⚡', title: 'Auto-priority', text: 'Impact × urgency × criticality', color: '#dc2626' },
+  { icon: '🧠', title: 'Smart assignment', text: 'Skills, workload, experience', color: '#0d9488' },
+  { icon: '⏱️', title: 'SLA & escalation', text: 'Warnings, breaches, 4-level chain', color: '#d97706' },
+  { icon: '🔔', title: 'Live alerts', text: 'In-app · e-mail · SMS', color: '#7c3aed' },
+];
+
+const STATS = [
+  { value: '7', label: 'AI features' },
+  { value: '4', label: 'assignment strategies' },
+  { value: '3', label: 'notification channels' },
+  { value: '100%', label: 'actions audited' },
+];
+
+const FLOW = ['Report', 'Classify', 'Prioritise', 'Assign', 'Resolve', 'Close'];
+
+/** Lifecycle figure: the stages every incident passes through. */
+function LifecycleFigure() {
+  return (
+    <div className="hero-flow" aria-label="Incident lifecycle">
+      {FLOW.map((s, i) => (
+        <div key={s} className="hero-flow-step">
+          <div className="hero-flow-dot">{i + 1}</div>
+          <div className="hero-flow-label">{s}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Priority matrix figure: impact × urgency for a criticality-3 service (Matrix strategy thresholds). */
+function PriorityMatrix() {
+  const pri = (i: number, u: number) => {
+    const score = i * u * 3;
+    return score >= 36 ? 'P1' : score >= 18 ? 'P2' : score >= 8 ? 'P3' : 'P4';
+  };
+  return (
+    <div className="hero-matrix">
+      <div className="hero-matrix-title">Priority matrix</div>
+      <div className="hero-matrix-grid">
+        {[4, 3, 2, 1].map((i) =>
+          [1, 2, 3, 4].map((u) => {
+            const p = pri(i, u);
+            return (
+              <div key={`${i}-${u}`} className={`hero-cell ${p}`} title={`Impact ${i}, urgency ${u} → ${p}`}>
+                {p}
+              </div>
+            );
+          }),
+        )}
+      </div>
+      <div className="hero-matrix-axes">
+        <span>Urgency →</span>
+        <span>↑ Impact</span>
+      </div>
+    </div>
+  );
+}
+
 export default function Login() {
   const { login, register } = useAuth();
   const [tab, setTab] = useState<'login' | 'register'>('login');
@@ -35,14 +94,39 @@ export default function Login() {
   return (
     <div className="login-wrap">
       <div className="login-hero">
-        <h1>I-ITSM Service Desk</h1>
-        <p>Report, prioritise, assign and resolve IT incidents with automatic prioritisation, smart technician assignment, SLA monitoring, duplicate detection and root-cause correlation.</p>
-        <ul style={{ lineHeight: 1.9 }}>
-          <li>Automatic priority: impact × urgency × business criticality</li>
-          <li>Smart assignment strategies & automatic escalation</li>
-          <li>Real-time notifications (in-app, e-mail, SMS)</li>
-          <li>Complete audit trail of every action</li>
-        </ul>
+        <div className="hero-brand">
+          <div className="brand-logo">IT</div>
+          <div>
+            <div className="hero-title">I-ITSM Service Desk</div>
+            <div className="hero-sub">Intelligent incident management</div>
+          </div>
+        </div>
+
+        <LifecycleFigure />
+
+        <div className="hero-grid">
+          {MODULES.map((m) => (
+            <div key={m.title} className="hero-tile">
+              <div className="hero-icon" style={{ background: m.color }}>{m.icon}</div>
+              <div>
+                <div className="hero-tile-title">{m.title}</div>
+                <div className="hero-tile-text">{m.text}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="hero-row">
+          <PriorityMatrix />
+          <div className="hero-stats">
+            {STATS.map((s) => (
+              <div key={s.label} className="hero-stat">
+                <div className="hero-stat-value">{s.value}</div>
+                <div className="hero-stat-label">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
       <div className="login-panel">
         <div className="card login-card">
