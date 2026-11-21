@@ -158,9 +158,9 @@ function OpsDashboard() {
               <YAxis allowDecimals={false} fontSize={12} />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="created" stroke="#2563eb" strokeWidth={2} />
-              <Line type="monotone" dataKey="resolved" stroke="#16a34a" strokeWidth={2} />
-              <Line type="monotone" dataKey="breached" stroke="#dc2626" strokeWidth={2} />
+              <Line type="monotone" dataKey="created" stroke="#2563eb" strokeWidth={2} isAnimationActive={false} />
+              <Line type="monotone" dataKey="resolved" stroke="#16a34a" strokeWidth={2} isAnimationActive={false} />
+              <Line type="monotone" dataKey="breached" stroke="#dc2626" strokeWidth={2} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -197,11 +197,11 @@ function OpsDashboard() {
         </div>
         <div className="card">
           <h2>Service health & analysis</h2>
-          <ResponsiveContainer width="100%" height={260}>
+          <ResponsiveContainer width="100%" height={340}>
             <BarChart data={services.data ?? []} layout="vertical" margin={{ left: 40 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis type="number" allowDecimals={false} fontSize={12} />
-              <YAxis type="category" dataKey="name" width={150} fontSize={12} />
+              <YAxis type="category" dataKey="name" width={150} fontSize={11} interval={0} />
               <Tooltip />
               <Legend />
               <Bar dataKey="incidents" fill="#7c3aed" name="All incidents" />

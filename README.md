@@ -2,6 +2,8 @@
 
 CS F213 / MAC F212 OOP project, Semester I 2026-27 — Group **[Group No.]**
 
+Repository: https://github.com/dhruv2402/I-ITSM
+
 A full-stack TypeScript application covering the complete incident lifecycle:
 **Report → Classify → Prioritise → Assign → Investigate → Resolve → Verify → Close**.
 
