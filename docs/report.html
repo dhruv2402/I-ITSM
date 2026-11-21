@@ -48,6 +48,7 @@
     <tr><td>[Member 5]</td><td>[ID]</td><td>Intelligent features, testing, DevOps</td></tr>
   </table>
   <p style="text-align:center">Source code: <a class="mono" href="https://github.com/dhruv2402/I-ITSM">https://github.com/dhruv2402/I-ITSM</a></p>
+  <p style="text-align:center">Live demo: <a class="mono" href="https://i-itsm-jy6e.onrender.com">https://i-itsm-jy6e.onrender.com</a> (Render + MongoDB Atlas; demo password <span class="mono">Password@123</span>)</p>
   <p style="text-align:center">Stack: React + TypeScript · Node.js + Express + TypeScript · MongoDB Atlas · Gmail SMTP · Server-Sent Events · Jest</p>
 </section>
 
@@ -920,7 +921,7 @@ Rule overrides: Impact 4 on criticality-4 service ⇒ P1;  ≥500 users ⇒ at l
 <p><b>2. Why this frontend technology?</b> React's component model fits three role-specific portals built from shared components (tables, badges, dialogs). Vite gives instant reloads; Recharts gives charts with little code; the result is a responsive SPA usable on desktop and mobile browsers.</p>
 <p><b>3. Why this backend technology?</b> Express is minimal and unopinionated, so our own domain model and patterns stay visible instead of being hidden by framework conventions; its middleware model fits authentication, RBAC, validation and central error handling. Node's event loop handles many concurrent SSE connections and the background SLA monitor efficiently.</p>
 <p><b>4. Why this database?</b> Incidents are naturally document-shaped aggregates (notes, SLA tracker, resolution, feedback embedded), so MongoDB stores an aggregate in one document and loads it in one read — matching our aggregate/Repository design. Atlas is a managed cloud service (backups, monitoring, free tier) reachable from any demo machine. Indexes on status, priority, category, service, technician, reporter and date support the search criteria.</p>
-<p><b>5. Why this architecture?</b> A layered monolith with clean boundaries is the simplest architecture that satisfies the requirements and is easy to demonstrate and test; the Repository/Adapter/Observer boundaries mean parts can later be extracted into services without rewriting business logic.</p>
+<p><b>5. Why this architecture?</b> A layered monolith with clean boundaries is the simplest architecture that satisfies the requirements and is easy to demonstrate and test; the Repository/Adapter/Observer boundaries mean parts can later be extracted into services without rewriting business logic. It is deployed to the cloud as a single <b>Render</b> web service (defined as code in <code>render.yaml</code>) that serves both the API and the built React app over HTTPS, with data in <b>MongoDB Atlas</b>: <span class="mono">https://i-itsm-jy6e.onrender.com</span>. Users only need ordinary HTTPS access, which also works on campus networks that block the MongoDB port.</p>
 <p><b>6. Alternatives considered.</b> Spring Boot + PostgreSQL (strong OOP, but heavier setup and two languages); Django/FastAPI (fast, but weaker static typing for OOP demonstration); relational DB (would need 6–7 joined tables for one incident view); microservices (operational overhead unjustified for this scope); WebSockets instead of SSE (bidirectional not needed; SSE is simpler and works through proxies).</p>
 <p><b>7. Advantages and limitations.</b> Advantages: one language end-to-end, fast development, cloud database, real-time push, easy testing with in-memory repositories, single-command deployment. Limitations: TypeScript types are erased at runtime (we add zod validation at the boundary); MongoDB has no cross-document foreign keys (integrity enforced in services); in-process SLA monitor and SSE hub need coordination when scaled to several instances.</p>
 <p><b>8. How the technology supports OOP.</b> TypeScript classes, interfaces, abstract members, access modifiers, generics and enums map one-to-one to the UML diagrams in Section 4. Express middleware and Mongoose are used only in the outer layer; the domain is plain TypeScript classes, so all business logic is object-oriented and framework-independent.</p>
@@ -1128,7 +1129,7 @@ erDiagram
 <li><b>Predictive SLA violation detection</b> using live and historical data.</li>
 <li><b>Real-time notifications</b> and <b>real-time operational dashboard</b> via Server-Sent Events (toasts, live refresh).</li>
 <li><b>Automated incident escalation</b> through four levels with multi-channel alerts.</li>
-<li><b>Cloud database</b> (MongoDB Atlas) and real third-party integration (<b>Gmail SMTP</b>).</li>
+<li><b>Cloud deployment</b> on Render (infrastructure as code, HTTPS, health checks) with a <b>cloud database</b> (MongoDB Atlas), and real third-party integration (<b>Gmail SMTP</b>).</li>
 <li><b>Event-driven architecture</b> internally (domain events + observers) ready to move to a broker.</li>
 <li><b>Analytics and visualisation</b>: trends, priority mix, service health, technician performance, CSV export.</li>
 <li>Explainability everywhere: priority rationale, assignment reasons, duplicate scores, risk reasons.</li>

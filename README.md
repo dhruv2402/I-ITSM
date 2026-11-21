@@ -4,6 +4,8 @@ CS F213 / MAC F212 OOP project, Semester I 2026-27 — Group **[Group No.]**
 
 Repository: https://github.com/dhruv2402/I-ITSM
 
+**Live demo:** https://i-itsm-jy6e.onrender.com (free plan: the first visit after ~15 idle minutes takes 30-60 s to wake up). Demo password `Password@123`.
+
 A full-stack TypeScript application covering the complete incident lifecycle:
 **Report → Classify → Prioritise → Assign → Investigate → Resolve → Verify → Close**.
 
