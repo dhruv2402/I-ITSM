@@ -15,13 +15,6 @@ const MODULES = [
   { icon: '🔔', title: 'Live alerts', text: 'In-app · e-mail · SMS', color: '#7c3aed' },
 ];
 
-const STATS = [
-  { value: '7', label: 'AI features' },
-  { value: '4', label: 'assignment strategies' },
-  { value: '3', label: 'notification channels' },
-  { value: '100%', label: 'actions audited' },
-];
-
 const FLOW = ['Report', 'Classify', 'Prioritise', 'Assign', 'Resolve', 'Close'];
 
 /** Lifecycle figure: the stages every incident passes through. */
@@ -34,35 +27,6 @@ function LifecycleFigure() {
           <div className="hero-flow-label">{s}</div>
         </div>
       ))}
-    </div>
-  );
-}
-
-/** Priority matrix figure: impact × urgency for a criticality-3 service (Matrix strategy thresholds). */
-function PriorityMatrix() {
-  const pri = (i: number, u: number) => {
-    const score = i * u * 3;
-    return score >= 36 ? 'P1' : score >= 18 ? 'P2' : score >= 8 ? 'P3' : 'P4';
-  };
-  return (
-    <div className="hero-matrix">
-      <div className="hero-matrix-title">Priority matrix</div>
-      <div className="hero-matrix-grid">
-        {[4, 3, 2, 1].map((i) =>
-          [1, 2, 3, 4].map((u) => {
-            const p = pri(i, u);
-            return (
-              <div key={`${i}-${u}`} className={`hero-cell ${p}`} title={`Impact ${i}, urgency ${u} → ${p}`}>
-                {p}
-              </div>
-            );
-          }),
-        )}
-      </div>
-      <div className="hero-matrix-axes">
-        <span>Urgency →</span>
-        <span>↑ Impact</span>
-      </div>
     </div>
   );
 }
@@ -114,18 +78,6 @@ export default function Login() {
               </div>
             </div>
           ))}
-        </div>
-
-        <div className="hero-row">
-          <PriorityMatrix />
-          <div className="hero-stats">
-            {STATS.map((s) => (
-              <div key={s.label} className="hero-stat">
-                <div className="hero-stat-value">{s.value}</div>
-                <div className="hero-stat-label">{s.label}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
       <div className="login-panel">

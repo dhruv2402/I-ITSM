@@ -195,20 +195,6 @@ input[type='checkbox'] { width: auto; }
 .hero-icon { width: 38px; height: 38px; flex: none; border-radius: 10px; display: grid; place-items: center; font-size: 18px; }
 .hero-tile-title { font-weight: 700; color: #fff; font-size: 14px; }
 .hero-tile-text { color: var(--muted); font-size: 12px; margin-top: 2px; }
-.hero-row { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: stretch; }
-.hero-matrix { padding: 14px; border-radius: 12px; background: rgba(15, 22, 41, 0.8); border: 1px solid var(--border); }
-.hero-matrix-title { font-size: 12px; font-weight: 700; color: #c7d2fe; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
-.hero-matrix-grid { display: grid; grid-template-columns: repeat(4, 34px); gap: 4px; }
-.hero-cell { height: 26px; border-radius: 5px; display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff; }
-.hero-cell.P1 { background: #dc2626; }
-.hero-cell.P2 { background: #ea580c; }
-.hero-cell.P3 { background: #ca8a04; }
-.hero-cell.P4 { background: #16a34a; }
-.hero-matrix-axes { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 6px; }
-.hero-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.hero-stat { padding: 12px 14px; border-radius: 12px; background: rgba(15, 22, 41, 0.8); border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; }
-.hero-stat-value { font-size: 26px; font-weight: 800; background: linear-gradient(90deg, #a5b4fc, #5eead4); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.hero-stat-label { font-size: 12px; color: var(--muted); }
 .login-panel { display: grid; place-items: center; padding: 40px; }
 .login-card { width: 100%; max-width: 420px; }
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
