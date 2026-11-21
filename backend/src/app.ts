@@ -11,6 +11,8 @@ import { Container } from './container';
 export function createApp(c: Container, opts: { clientOrigin?: string } = {}): Express {
   const app = express();
   app.disable('x-powered-by');
+  // behind Render's (or any) reverse proxy: trust the first hop so rate limiting sees the real client IP
+  app.set('trust proxy', 1);
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(cors({ origin: opts.clientOrigin ? opts.clientOrigin.split(',') : true }));
   app.use(express.json({ limit: '100kb' }));

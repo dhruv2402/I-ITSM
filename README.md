@@ -67,6 +67,16 @@ npm run build --prefix backend
 npm start --prefix backend   # serves the API and the built React app on :4000
 ```
 
+### Cloud deployment (Render + MongoDB Atlas)
+
+The repository contains a Render Blueprint (`render.yaml`). One free web service builds the React app and the API (`npm run render-build`) and serves both (`npm start`); data stays in MongoDB Atlas.
+
+1. render.com → **New → Blueprint** → select this repository.
+2. Paste the Atlas connection string when asked for `MONGODB_URI` (`JWT_SECRET` is generated automatically).
+3. Optional real e-mail: add `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`, `EMAIL_OVERRIDE_RECIPIENT` in the service's **Environment** tab.
+
+The free plan sleeps after ~15 minutes without traffic; the first request then takes ~30-60 s.
+
 ## Project structure
 
 ```
