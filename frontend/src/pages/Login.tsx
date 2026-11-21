@@ -57,6 +57,7 @@ export default function Login() {
 
   return (
     <div className="login-wrap">
+      <div className="login-inner">
       <div className="login-hero">
         <div className="hero-brand">
           <div className="brand-logo">IT</div>
@@ -125,6 +126,7 @@ export default function Login() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

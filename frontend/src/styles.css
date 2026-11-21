@@ -159,27 +159,25 @@ input[type='checkbox'] { width: auto; }
 .login-wrap {
   --bg: #070b16; --surface: #0f1629; --surface-2: #131c33; --border: #23304d; --text: #e2e8f0; --muted: #8b9bb8;
   --accent: #6366f1; --accent-soft: rgba(99, 102, 241, 0.18);
-  min-height: 100vh; display: grid; grid-template-columns: 1.25fr 1fr; background: var(--bg); color: var(--text);
+  position: relative; min-height: 100vh; display: grid; place-items: center; padding: 40px 32px; color: var(--text);
+  background: radial-gradient(800px 480px at 15% 20%, rgba(99, 102, 241, 0.22), transparent 60%),
+              radial-gradient(700px 460px at 85% 85%, rgba(13, 148, 136, 0.18), transparent 60%),
+              linear-gradient(180deg, #070b16, #0a1022);
 }
+.login-wrap::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.35;
+  background-image: linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+/* one compact, centred composition: content keeps its natural height on any window shape */
+.login-inner { position: relative; width: 100%; max-width: 1080px; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px; align-items: center; }
 .login-wrap input { background: #0b1222; border-color: var(--border); color: var(--text); }
 .login-wrap .card { background: var(--surface); border-color: var(--border); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45); }
 .login-wrap .tab { color: var(--muted); }
 .login-wrap .tab.active { color: #a5b4fc; border-bottom-color: #818cf8; }
 .login-wrap .demo-users button { background: var(--surface-2); border-color: var(--border); color: var(--text); }
 .login-wrap .demo-users button:hover { border-color: #818cf8; }
-.login-hero {
-  position: relative; overflow: hidden; padding: 48px 56px; display: flex; flex-direction: column; justify-content: center; gap: 26px;
-  background: radial-gradient(900px 500px at -10% -10%, rgba(99, 102, 241, 0.28), transparent 60%),
-              radial-gradient(700px 500px at 110% 110%, rgba(13, 148, 136, 0.22), transparent 60%),
-              linear-gradient(180deg, #080d1c, #0b1124);
-  border-right: 1px solid var(--border);
-}
-.login-hero::before {
-  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.35;
-  background-image: linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
-  background-size: 36px 36px;
-}
-.login-hero > * { position: relative; }
+.login-hero { display: flex; flex-direction: column; gap: 28px; }
 .hero-brand { display: flex; align-items: center; gap: 14px; }
 .hero-brand .brand-logo { width: 46px; height: 46px; border-radius: 12px; font-size: 18px; font-weight: 800; background: linear-gradient(135deg, #6366f1, #0d9488); }
 .hero-title { font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.01em; }
@@ -195,7 +193,7 @@ input[type='checkbox'] { width: auto; }
 .hero-icon { width: 38px; height: 38px; flex: none; border-radius: 10px; display: grid; place-items: center; font-size: 18px; }
 .hero-tile-title { font-weight: 700; color: #fff; font-size: 14px; }
 .hero-tile-text { color: var(--muted); font-size: 12px; margin-top: 2px; }
-.login-panel { display: grid; place-items: center; padding: 40px; }
+.login-panel { display: grid; place-items: center; }
 .login-card { width: 100%; max-width: 420px; }
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
 .tab { padding: 8px 14px; cursor: pointer; border: none; background: none; font: inherit; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; }
@@ -216,7 +214,7 @@ input[type='checkbox'] { width: auto; }
 @media (max-width: 1000px) {
   .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid-3, .grid-main, .grid-2 { grid-template-columns: 1fr; }
-  .login-wrap { grid-template-columns: 1fr; }
+  .login-inner { grid-template-columns: 1fr; max-width: 440px; }
   .login-hero { display: none; }
 }
 @media (max-width: 720px) {
