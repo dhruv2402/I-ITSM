@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>I-ITSM Project Report</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  @page { size: A4; margin: 16mm 14mm 18mm 14mm; }
+  :root { --ink:#0f172a; --muted:#475569; --accent:#4338ca; --line:#cbd5e1; }
+  body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; color: var(--ink); font-size: 10.5pt; line-height: 1.45; margin: 0; background: #fff; }
+  h1 { font-size: 20pt; color: var(--accent); margin: 0 0 8px; page-break-before: always; border-bottom: 2px solid var(--accent); padding-bottom: 4px; }
+  h1.nobreak { page-break-before: avoid; }
+  h2 { font-size: 13.5pt; color: #1e293b; margin: 18px 0 6px; }
+  h3 { font-size: 11.5pt; margin: 12px 0 4px; color: #334155; }
+  p { margin: 5px 0 8px; text-align: justify; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 9.3pt; page-break-inside: auto; }
+  tr { page-break-inside: avoid; }
+  th, td { border: 1px solid var(--line); padding: 4px 6px; vertical-align: top; text-align: left; }
+  th { background: #eef2ff; }
+  code, .mono { font-family: Consolas, 'Courier New', monospace; font-size: 9pt; background: #f1f5f9; padding: 0 3px; border-radius: 3px; }
+  pre.code { font-family: Consolas, monospace; font-size: 8.6pt; background: #f8fafc; border: 1px solid var(--line); padding: 8px; white-space: pre-wrap; page-break-inside: avoid; }
+  .cover { height: 250mm; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+  .cover h1 { page-break-before: avoid; border: none; font-size: 26pt; }
+  .cover .sub { font-size: 14pt; color: var(--muted); }
+  .figure { page-break-inside: avoid; margin: 10px 0 14px; text-align: center; }
+  .figure .cap { font-size: 9pt; color: var(--muted); margin-top: 4px; }
+  pre.mermaid { background: #fff; margin: 0 auto; }
+  .note { background: #eef2ff; border-left: 4px solid var(--accent); padding: 6px 10px; margin: 8px 0; font-size: 9.8pt; }
+  .toc li { margin: 2px 0; }
+  ul { margin: 4px 0 8px; padding-left: 20px; }
+  li { margin: 2px 0; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="sub">CS F213 / MAC F212 Object Oriented Programming — Semester I, 2026-2027</div>
+  <h1>I-ITSM<br/>Intelligent IT Service Management &amp; Incident Resolution System</h1>
+  <div class="sub">Project Report</div>
+  <p style="text-align:center;margin-top:30px;font-size:12pt">Group No. <b>[Group No.]</b></p>
+  <table style="width:70%;margin:10px auto">
+    <tr><th>Member</th><th>ID</th><th>Primary responsibility</th></tr>
+    <tr><td>[Member 1]</td><td>[ID]</td><td>Domain model &amp; OOP design, design patterns</td></tr>
+    <tr><td>[Member 2]</td><td>[ID]</td><td>Backend REST API, security (JWT, RBAC)</td></tr>
+    <tr><td>[Member 3]</td><td>[ID]</td><td>Database / persistence (MongoDB Atlas, repositories)</td></tr>
+    <tr><td>[Member 4]</td><td>[ID]</td><td>Frontend UI/UX (React portals, dashboards)</td></tr>
+    <tr><td>[Member 5]</td><td>[ID]</td><td>Intelligent features, testing, DevOps</td></tr>
+  </table>
+  <p style="text-align:center">Source code: <span class="mono">[GitHub repository URL]</span></p>
+  <p style="text-align:center">Stack: React + TypeScript · Node.js + Express + TypeScript · MongoDB Atlas · Gmail SMTP · Server-Sent Events · Jest</p>
+</section>
+
+<h1>Contents</h1>
+<ol class="toc">
+  <li>Problem Analysis</li>
+  <li>Requirements Specification</li>
+  <li>System Architecture</li>
+  <li>UML Diagrams (use case, class, state, sequence)</li>
+  <li>Object-Oriented Design</li>
+  <li>Design Patterns</li>
+  <li>Core Algorithms: Priority, Assignment, SLA, Escalation</li>
+  <li>Intelligent Features</li>
+  <li>Technology Stack &amp; Technology Selection Report</li>
+  <li>Security</li>
+  <li>Exception and Error Handling</li>
+  <li>Database Design</li>
+  <li>Testing</li>
+  <li>Innovation Beyond the MVP</li>
+  <li>User Interface</li>
+  <li>Demonstration Workflows</li>
+  <li>Team Responsibilities</li>
+  <li>Limitations and Future Work</li>
+  <li>Appendix A – REST API · Appendix B – How to run · Appendix C – Rubric coverage</li>
+</ol>
+
+<!-- ====================================================================== -->
+<h1>1. Problem Analysis</h1>
+<h2>1.1 Problem</h2>
+<p>Organisations depend on IT services such as payment gateways, single sign-on, databases, networks and e-mail. When a service fails, employees must report the problem and the IT support team must identify, prioritise, assign, investigate, resolve and close it. At scale (hundreds of incidents per day) a manual process causes delayed responses, wrong priorities, overloaded or idle technicians, SLA violations, duplicate reports, lost history and no visibility of recurring problems.</p>
+<h2>1.2 Stakeholders</h2>
+<table>
+<tr><th>Stakeholder</th><th>Interest</th></tr>
+<tr><td>Employees / customers</td><td>Report problems easily, know the status, get a fix quickly, give feedback.</td></tr>
+<tr><td>Technicians / support engineers</td><td>A clear, prioritised queue; information needed to investigate; fair workload.</td></tr>
+<tr><td>Team leads</td><td>Supervise the queue, (re)assign work, react to escalations.</td></tr>
+<tr><td>System administrators</td><td>Configure services, categories, SLA policies, strategies, users; audit.</td></tr>
+<tr><td>IT manager</td><td>Service health, SLA compliance, workload and trend reports; last escalation level.</td></tr>
+<tr><td>Business service owners</td><td>Contractual SLAs for critical services (e.g. payments).</td></tr>
+</table>
+<h2>1.3 Existing challenges → our response</h2>
+<table>
+<tr><th>Challenge</th><th>How I-ITSM addresses it</th></tr>
+<tr><td>Delayed response</td><td>Automatic classification, prioritisation and assignment at creation time; real-time notifications; SLA monitor with warnings.</td></tr>
+<tr><td>Incorrect prioritisation</td><td>Documented weighted priority algorithm (impact, urgency, business criticality, affected users) + business-rule overrides; admin can switch algorithm.</td></tr>
+<tr><td>Inefficient technician allocation</td><td>Four interchangeable assignment strategies incl. a multi-factor smart strategy; workload limits; availability.</td></tr>
+<tr><td>SLA violations</td><td>Per-priority and per-service SLA policies, deadline tracking, warnings, breach recording, predictive SLA risk, automatic escalation.</td></tr>
+<tr><td>Poor visibility</td><td>Live operations dashboard (SSE), service health, reports, CSV export.</td></tr>
+<tr><td>Duplicate reports</td><td>TF-IDF duplicate detection with linking; same-reporter resubmission rule.</td></tr>
+<tr><td>Incomplete history</td><td>Immutable audit trail generated by an Observer for every domain event.</td></tr>
+<tr><td>Recurring problems</td><td>Correlation over a service dependency graph (probable root cause), resolution recommender from history.</td></tr>
+</table>
+<h2>1.4 Proposed solution</h2>
+<p>A full-stack web application (React SPA + Node.js/Express REST API + MongoDB Atlas) built around a rich, object-oriented domain model. The <b>Incident</b> aggregate enforces its lifecycle through the <b>State</b> pattern; algorithms are pluggable <b>Strategies</b>; side effects (audit, notifications, live dashboard) are decoupled through an <b>Observer</b> event bus; persistence is hidden behind <b>Repositories</b>; external providers are wrapped by <b>Adapters</b>; objects are built by <b>Factories</b>; everything is wired in one composition root.</p>
+<h2>1.5 Assumptions</h2>
+<ul>
+<li>One organisation (single tenant); users belong to one of five roles: Employee, Technician, Team Lead, Administrator, IT Manager.</li>
+<li>Impact, urgency and business criticality use a 1–4 ordinal scale; business criticality belongs to the IT service, not to the reporter.</li>
+<li>SLA clocks run in calendar time (24×7); the resolution clock pauses while the technician waits for information from the reporter.</li>
+<li>Escalation applies to P1/P2 incidents not acknowledged within the response target; each further response window raises one level.</li>
+<li>E-mail is sent through Gmail SMTP; SMS is simulated (adapter ready for a real provider). Demo accounts use fictitious addresses, so e-mails can be redirected to one inbox.</li>
+<li>Self-registration creates Employees only; staff accounts are created by administrators.</li>
+</ul>
+
+<!-- ====================================================================== -->
+<h1>2. Requirements Specification</h1>
+<h2>2.1 Functional requirements</h2>
+<table>
+<tr><th>ID</th><th>Requirement</th><th>Implemented in</th></tr>
+<tr><td>FR1</td><td>Register / log in; JWT session; change password</td><td>AuthService, /auth/*</td></tr>
+<tr><td>FR2</td><td>Report an incident (title, description, service, category optional, impact, urgency, affected users)</td><td>IncidentService.create</td></tr>
+<tr><td>FR3</td><td>Automatic classification (AI suggestion) and manual reclassification</td><td>CategoryClassifier, Incident.classify</td></tr>
+<tr><td>FR4</td><td>Automatic priority P1–P4 from impact, urgency, business criticality, affected users, service</td><td>PriorityCalculator + strategies</td></tr>
+<tr><td>FR5</td><td>Determine applicable SLA (service-specific, else default) and compute deadlines</td><td>SlaService, SlaTracker</td></tr>
+<tr><td>FR6</td><td>Identify suitable technicians and assign automatically; manual (re)assignment with recommendations</td><td>AssignmentStrategyRegistry, /assign, /recommendations</td></tr>
+<tr><td>FR7</td><td>Lifecycle actions: acknowledge, start, investigation notes, request/provide info, resolve, verify, reopen, close</td><td>Incident + State pattern</td></tr>
+<tr><td>FR8</td><td>Feedback (1–5 stars) after resolution</td><td>Incident.submitFeedback</td></tr>
+<tr><td>FR9</td><td>Notifications on important events through ≥2 mechanisms (in-app, e-mail, SMS)</td><td>NotificationSubscriber, channels</td></tr>
+<tr><td>FR10</td><td>SLA monitoring: response/resolution tracking, warnings, violation detection &amp; recording</td><td>SlaMonitor (background)</td></tr>
+<tr><td>FR11</td><td>Automatic escalation Technician → Team Lead → Administrator → IT Manager</td><td>EscalationService</td></tr>
+<tr><td>FR12</td><td>Complete audit trail (timestamp, user, action, incident, previous/new state, description)</td><td>AuditTrailSubscriber</td></tr>
+<tr><td>FR13</td><td>Search/filter by ID, keywords, date range, status, priority, category, service, technician, SLA status, escalation</td><td>IncidentSpecification, /incidents</td></tr>
+<tr><td>FR14</td><td>Reports: overview, technician workload, service analysis, trends, SLA violations/risk, CSV export</td><td>ReportService</td></tr>
+<tr><td>FR15</td><td>Admin: users &amp; technicians, IT services &amp; dependencies, categories, SLA policies, strategies, audit, notification log</td><td>UserService, CatalogService, SettingsService</td></tr>
+<tr><td>FR16</td><td>Intelligent features: duplicates, correlation/root cause, escalation, smart recommendation, SLA risk, categorisation, suggested resolution</td><td>intelligence/*</td></tr>
+<tr><td>FR17</td><td>Technician workload view and availability toggle</td><td>/technicians/me/*</td></tr>
+</table>
+<h2>2.2 Non-functional requirements</h2>
+<table>
+<tr><th>Category</th><th>Requirement</th></tr>
+<tr><td>Maintainability</td><td>Layered architecture; business rules only in the domain; dependencies on interfaces; one composition root.</td></tr>
+<tr><td>Extensibility</td><td>New category / SLA policy / service = data, no code. New assignment or priority algorithm, notification channel, e-mail provider or database = one new class implementing an interface.</td></tr>
+<tr><td>Security</td><td>bcrypt password hashing, JWT (HS256, 8 h), role + ownership authorisation, input validation (zod), helmet headers, CORS, login rate-limit, CSV-injection guard.</td></tr>
+<tr><td>Performance</td><td>Indexed MongoDB queries for search; API responses &lt; 300 ms for typical data volumes; background SLA monitor runs every 30 s without blocking requests.</td></tr>
+<tr><td>Reliability</td><td>A failing observer (e.g. e-mail outage) never breaks the business operation; DB errors mapped to <code>DatabaseError</code>; graceful degradation for missing SLA configuration.</td></tr>
+<tr><td>Usability</td><td>Separate, colour-coded portals per user type; live analysis while typing; real-time toasts; responsive layout.</td></tr>
+<tr><td>Testability</td><td>In-memory repositories and a controllable clock allow deterministic unit/integration tests.</td></tr>
+<tr><td>Auditability</td><td>Every state change and configuration change is recorded and immutable.</td></tr>
+</table>
+<h2>2.3 User roles</h2>
+<table>
+<tr><th>Role</th><th>Class</th><th>Main permissions</th></tr>
+<tr><td>Employee</td><td>Employee</td><td>INCIDENT_CREATE, INCIDENT_VIEW_OWN (+ reporter actions: add info, verify, reopen, feedback)</td></tr>
+<tr><td>Technician</td><td>Technician</td><td>+ INCIDENT_VIEW_ASSIGNED, INCIDENT_WORK, INCIDENT_CLOSE</td></tr>
+<tr><td>Team Lead</td><td>TeamLead extends Technician</td><td>+ INCIDENT_VIEW_ALL, INCIDENT_ASSIGN, REPORT_VIEW</td></tr>
+<tr><td>Administrator</td><td>Administrator</td><td>VIEW_ALL, ASSIGN, CLOSE, UPDATE_ANY, USER_MANAGE, CONFIG_MANAGE, REPORT_VIEW, AUDIT_VIEW</td></tr>
+<tr><td>IT Manager</td><td>Manager extends Administrator</td><td>+ REPORT_EXPORT; final escalation level</td></tr>
+</table>
+<h2>2.4 Business rules</h2>
+<ol>
+<li>BR1 – Lifecycle: NEW → CLASSIFIED → ASSIGNED → ACKNOWLEDGED → IN_PROGRESS (⇄ PENDING_INFO) → RESOLVED → VERIFIED → CLOSED; RESOLVED/VERIFIED may be reopened to IN_PROGRESS; reassignment returns to ASSIGNED. Any other move is rejected (e.g. NEW → CLOSED).</li>
+<li>BR2 – Only the assigned technician may acknowledge, start work and request information; the assignee or a supervisor may resolve.</li>
+<li>BR3 – Only the reporter may provide requested information, verify the resolution and give feedback (exactly once, rating 1–5).</li>
+<li>BR4 – A technician cannot receive work when unavailable or at maximum workload (<code>TechnicianUnavailable</code>, <code>WorkloadExceeded</code>).</li>
+<li>BR5 – The same reporter submitting a similar title for the same service within 30 minutes while the first incident is open is rejected as <code>DUPLICATE_INCIDENT</code> (unless explicitly confirmed).</li>
+<li>BR6 – Service-specific SLA policies override the default policy for that priority; at most one active policy per (priority, service).</li>
+<li>BR7 – The SLA resolution clock pauses in PENDING_INFO; the deadline moves by the paused time.</li>
+<li>BR8 – A warning is raised once when the configured share (default 75 %) of the resolution window has elapsed; breaches are recorded once.</li>
+<li>BR9 – Unacknowledged P1/P2 incidents escalate one level per elapsed response window, up to the IT Manager.</li>
+<li>BR10 – Changing impact, urgency or affected users recalculates the priority and re-applies the SLA.</li>
+<li>BR11 – Resolution summary ≥ 10 characters; reopening requires a reason.</li>
+<li>BR12 – Self-registration only creates Employees; admins cannot deactivate themselves or change their own role.</li>
+</ol>
+
+<!-- ====================================================================== -->
+<h1>3. System Architecture</h1>
+<p>We chose a <b>layered architecture</b> (the first option in the brief) deployed as a single Node.js process that serves both the REST API and the built React app, with MongoDB Atlas as a managed cloud database. Dependencies point inwards: controllers → application services → domain; infrastructure (MongoDB, SMTP, SSE) implements interfaces owned by the inner layers.</p>
+<div class="figure">
+<pre class="mermaid">
+flowchart TB
+  subgraph Client["Browser - React SPA (TypeScript, Vite)"]
+    EP["Employee portal"]
+    TW["Support workspace (Technician / Team Lead)"]
+    AC["IT management console (Admin / Manager)"]
+  end
+  Client -- "REST/JSON + JWT" --> API
+  Client -. "Server-Sent Events (live notifications)" .- RT
+  subgraph Server["Node.js + Express (TypeScript)"]
+    API["API layer: router, zod validation, auth + RBAC middleware, error handler"]
+    SVC["Application services: IncidentService, AuthService, UserService, CatalogService, SettingsService, ReportService, IncidentAccessPolicy"]
+    DOM["Domain model: User hierarchy, Incident aggregate, IncidentState, SlaTracker, SlaPolicy, ItService, Category, DomainEvent"]
+    STR["Strategies: priority + assignment"]
+    INT["Intelligence: classifier, duplicates, correlation, recommender, SLA risk"]
+    BUS["EventBus (Observer)"]
+    OBS["Observers: AuditTrail, Notifications, RealtimeDashboard"]
+    MON["SlaMonitor + EscalationService (background job)"]
+    REPO["Repository interfaces"]
+    RT["RealtimeHub (SSE)"]
+    API --> SVC --> DOM
+    SVC --> STR
+    SVC --> INT
+    SVC --> REPO
+    SVC --> BUS --> OBS
+    MON --> REPO
+    MON --> BUS
+    OBS --> RT
+  end
+  REPO --> MONGO[("MongoDB Atlas")]
+  OBS -- "Adapter: nodemailer" --> GMAIL["Gmail SMTP"]
+  OBS -- "Adapter" --> SMS["SMS gateway (simulated)"]
+</pre>
+<div class="cap">Figure 3.1 – Layered architecture and component interactions</div>
+</div>
+<h3>Request flow (example: report incident)</h3>
+<p>The React form calls <code>POST /api/incidents</code>. The router validates the body with zod, the auth middleware resolves the JWT to a <code>User</code> object, and <code>IncidentService.create</code> orchestrates: create <code>Incident</code> → classify → calculate priority (strategy) → attach SLA → detect duplicates → choose technician (strategy) → save (repository) → publish domain events. Observers then write the audit trail, send notifications (in-app via SSE, e-mail via Gmail adapter, SMS for critical events) and push a live refresh to all dashboards.</p>
+
+<!-- ====================================================================== -->
+<h1>4. UML Diagrams</h1>
+<h2>4.1 Use case diagram</h2>
+<div class="figure">
+<pre class="mermaid">
+flowchart LR
+  E(("👤 Employee"))
+  T(("👤 Technician"))
+  L(("👤 Team Lead"))
+  A(("👤 Administrator"))
+  M(("👤 IT Manager"))
+  S(("⏱ SLA Monitor (system)"))
+  subgraph SYS["I-ITSM"]
+    U1(["Register / Login"])
+    U2(["Report incident"])
+    U3(["Track status / view resolution"])
+    U4(["Add info / respond to request"])
+    U5(["Verify & give feedback / reopen"])
+    U6(["View assigned queue & workload"])
+    U7(["Acknowledge & investigate"])
+    U8(["Add notes / request info"])
+    U9(["Resolve / close incident"])
+    U10(["Assign / reassign (recommendations)"])
+    U11(["Monitor incidents & SLA"])
+    U12(["Manage users & technicians"])
+    U13(["Configure services, categories, SLA, strategies"])
+    U14(["View reports & audit log"])
+    U15(["Detect duplicates & correlate"])
+    U16(["Send notifications"])
+    U17(["Escalate incident"])
+  end
+  E --- U1 & U2 & U3 & U4 & U5
+  T --- U1 & U6 & U7 & U8 & U9
+  L --- U10 & U11 & U14
+  L -. "is a" .-> T
+  A --- U10 & U11 & U12 & U13 & U14
+  M --- U14 & U11
+  M -. "is a" .-> A
+  S --- U17 & U16
+  U2 -. "include" .-> U15
+  U2 -. "include" .-> U16
+</pre>
+<div class="cap">Figure 4.1 – Actors and use cases (generalisation: Team Lead is a Technician, IT Manager is an Administrator)</div>
+</div>
+
+<h2>4.2 Class diagram – users (inheritance, polymorphism, factory)</h2>
+<div class="figure">
+<pre class="mermaid">
+classDiagram
+  class User {
+    &lt;&lt;abstract&gt;&gt;
+    #props: UserProps
+    +id: string
+    +name: string
+    +email: string
+    +role: Role
+    +isActive: boolean
+    #permissionSet()* Set~Permission~
+    +title()* string
+    +hasPermission(p: Permission) boolean
+    +isSupportStaff() boolean
+    +updateProfile(changes) void
+    +changePasswordHash(hash) void
+    +deactivate() void
+    +toSnapshot() UserSnapshot
+    +toPublic() PublicUser
+  }
+  class Employee {
+    +title() string
+  }
+  class Technician {
+    -extras: TechnicianExtras
+    +skills: string[]
+    +maxWorkload: number
+    +experienceYears: number
+    +isAvailable: boolean
+    +hasSkill(category) boolean
+    +canTakeMore(workload) boolean
+    +setAvailability(b) void
+    +updateTechnicalProfile(c) void
+  }
+  class TeamLead
+  class Administrator
+  class Manager
+  class UserFactory {
+    +create(snapshot)$ User
+    +idPrefix(role)$ string
+  }
+  class Permission {
+    &lt;&lt;enumeration&gt;&gt;
+    INCIDENT_CREATE
+    INCIDENT_WORK
+    INCIDENT_ASSIGN
+    USER_MANAGE
+    CONFIG_MANAGE
+    REPORT_VIEW
+    AUDIT_VIEW
+  }
+  User &lt;|-- Employee
+  User &lt;|-- Technician
+  Technician &lt;|-- TeamLead
+  User &lt;|-- Administrator
+  Administrator &lt;|-- Manager
+  UserFactory ..> User : creates
+  User ..> Permission
+</pre>
+<div class="cap">Figure 4.2 – User hierarchy. Each subclass overrides <code>permissionSet()</code> and <code>title</code>.</div>
+</div>
+
+<h2>4.3 Class diagram – incident aggregate (composition, association, State pattern)</h2>
+<div class="figure">
+<pre class="mermaid">
+classDiagram
+  class Incident {
+    -state: IncidentState
+    -sla: SlaTracker
+    -data: IncidentData
+    -pendingEvents: DomainEvent[]
+    +create(id, input)$ Incident
+    +fromSnapshot(s)$ Incident
+    +classify(code, actor, confidence) void
+    +applyPriority(assessment, actor) boolean
+    +attachSla(policy, actor) void
+    +assignTo(tech, actor, reason) void
+    +acknowledge(actor) void
+    +startWork(actor) void
+    +addNote(actor, text, type) WorkNote
+    +requestInfo(actor, question) void
+    +provideInfo(actor, answer) void
+    +resolve(actor, summary, rootCause) void
+    +verify(actor) void
+    +reopen(actor, reason) void
+    +close(actor, code) void
+    +submitFeedback(actor, rating, comment) void
+    +escalate(level, target, reason, actor) void
+    +linkRelated(ids, actor, reason, dup) void
+    +flagSlaWarning() boolean
+    +flagSlaBreaches() boolean
+    +slaStatus(now) SlaStatus
+    +availableActions() IncidentAction[]
+    +pullEvents() DomainEvent[]
+  }
+  class IncidentState {
+    &lt;&lt;abstract&gt;&gt;
+    +status: IncidentStatus
+    #transitions: Map
+    +next(action) IncidentState
+    +can(action) boolean
+    +isActive() boolean
+    +slaClockRunning() boolean
+    +allowsDetailEdits() boolean
+    +describe()* string
+  }
+  class NewState
+  class ClassifiedState
+  class AssignedState
+  class AcknowledgedState
+  class InProgressState
+  class PendingInfoState
+  class ResolvedState
+  class VerifiedState
+  class ClosedState
+  class IncidentStates {
+    -registry: Map$
+    +of(status)$ IncidentState
+    +transitionTable()$ Row[]
+  }
+  class SlaTracker {
+    -responseDueAt: Date
+    -resolutionDueAt: Date
+    -respondedAt: Date
+    -resolvedAt: Date
+    -pausedAt: Date
+    +start(policy, at)$ SlaTracker
+    +markResponded(at) void
+    +markResolved(at) void
+    +pause(at) void
+    +resume(at) void
+    +elapsedFraction(now) number
+    +status(now) SlaStatus
+  }
+  class WorkNote
+  class Resolution
+  class Feedback
+  class SlaPolicy {
+    +priority: Priority
+    +serviceId: string
+    +responseMinutes: number
+    +resolutionMinutes: number
+    +warningThresholdPct: number
+  }
+  class ItService {
+    +id: string
+    +businessCriticality: Level
+    +userBase: number
+    +dependsOn: string[]
+  }
+  class Category {
+    +code: string
+    +keywords: string[]
+  }
+  IncidentState &lt;|-- NewState
+  IncidentState &lt;|-- ClassifiedState
+  IncidentState &lt;|-- AssignedState
+  IncidentState &lt;|-- AcknowledgedState
+  IncidentState &lt;|-- InProgressState
+  IncidentState &lt;|-- PendingInfoState
+  IncidentState &lt;|-- ResolvedState
+  IncidentState &lt;|-- VerifiedState
+  IncidentState &lt;|-- ClosedState
+  IncidentStates o-- IncidentState : flyweights
+  Incident --> IncidentState : current state
+  Incident *-- "0..1" SlaTracker
+  Incident *-- "*" WorkNote
+  Incident *-- "0..1" Resolution
+  Incident *-- "0..1" Feedback
+  SlaTracker ..> SlaPolicy : built from
+  Incident --> "1" ItService : affects
+  Incident --> "0..1" Category : classified as
+  Incident --> "1" Employee : reported by
+  Incident --> "0..1" Technician : assigned to
+  ItService o-- "*" ItService : depends on
+</pre>
+<div class="cap">Figure 4.3 – Incident aggregate. Filled diamonds = composition (life-cycle owned), hollow = aggregation, arrows = association.</div>
+</div>
+
+<h2>4.4 Class diagram – strategies (Strategy + Template Method)</h2>
+<div class="figure">
+<pre class="mermaid">
+classDiagram
+  class PriorityStrategy {
+    &lt;&lt;interface&gt;&gt;
+    +key: string
+    +calculate(input: PriorityInput) PriorityAssessment
+  }
+  class WeightedPriorityStrategy
+  class MatrixPriorityStrategy
+  class PriorityCalculator {
+    -strategies: Map
+    -activeKey: string
+    +use(key) void
+    +calculate(input) PriorityAssessment
+  }
+  PriorityStrategy &lt;|.. WeightedPriorityStrategy
+  PriorityStrategy &lt;|.. MatrixPriorityStrategy
+  PriorityCalculator o-- PriorityStrategy
+
+  class AssignmentStrategy {
+    &lt;&lt;interface&gt;&gt;
+    +key: string
+    +rank(ctx, candidates) RankedCandidate[]
+    +select(ctx, candidates) RankedCandidate
+  }
+  class AbstractAssignmentStrategy {
+    &lt;&lt;abstract&gt;&gt;
+    +select(ctx, candidates) RankedCandidate
+    +rank(ctx, candidates) RankedCandidate[]
+    #filterEligible(ctx, candidates) TechnicianCandidate[]
+    #order(ctx, eligible)* RankedCandidate[]
+  }
+  class SkillBasedStrategy
+  class LoadBasedStrategy
+  class RoundRobinStrategy {
+    -lastAssignedId: string
+  }
+  class SmartAssignmentStrategy
+  class AssignmentStrategyRegistry {
+    -strategies: Map
+    -activeKey: string
+    +use(key) void
+    +active() AssignmentStrategy
+  }
+  class TechnicianCandidate {
+    +technician: Technician
+    +activeWorkload: number
+    +resolvedForService: number
+  }
+  AssignmentStrategy &lt;|.. AbstractAssignmentStrategy
+  AbstractAssignmentStrategy &lt;|-- SkillBasedStrategy
+  AbstractAssignmentStrategy &lt;|-- LoadBasedStrategy
+  AbstractAssignmentStrategy &lt;|-- RoundRobinStrategy
+  AbstractAssignmentStrategy &lt;|-- SmartAssignmentStrategy
+  AssignmentStrategyRegistry o-- AssignmentStrategy
+  AssignmentStrategy ..> TechnicianCandidate
+</pre>
+<div class="cap">Figure 4.4 – Interchangeable algorithms selected at runtime by the administrator.</div>
+</div>
+
+<h2>4.5 Class diagram – events, notifications (Observer, Factory, Adapter)</h2>
+<div class="figure">
+<pre class="mermaid">
+classDiagram
+  class EventBus {
+    -subscribers: EventSubscriber[]
+    +subscribe(s) void
+    +publish(event) void
+  }
+  class EventSubscriber {
+    &lt;&lt;interface&gt;&gt;
+    +name: string
+    +interestedIn(type) boolean
+    +handle(event) void
+  }
+  class AuditTrailSubscriber
+  class NotificationSubscriber
+  class RealtimeSubscriber
+  class NotificationService {
+    +notify(event, recipients) NotificationRecord[]
+  }
+  class NotificationFactory {
+    +createChannel(type) NotificationChannel
+    +createMessage(event, recipient) NotificationMessage
+  }
+  class ChannelSelectionPolicy {
+    &lt;&lt;interface&gt;&gt;
+    +channelsFor(type, priority) ChannelType[]
+  }
+  class PriorityBasedChannelPolicy
+  class NotificationChannel {
+    &lt;&lt;interface&gt;&gt;
+    +type: ChannelType
+    +deliver(message) DeliveryResult
+  }
+  class InAppChannel
+  class EmailChannel
+  class SmsChannel
+  class EmailGateway {
+    &lt;&lt;interface&gt;&gt;
+    +send(message) void
+  }
+  class GmailSmtpAdapter {
+    -transporter: nodemailer.Transporter
+  }
+  class ConsoleEmailAdapter
+  class SmsGateway {
+    &lt;&lt;interface&gt;&gt;
+    +send(phone, text) void
+  }
+  class SimulatedSmsGateway
+  class RealtimeHub {
+    +sendToUser(id, event, data) void
+    +broadcast(event, data) void
+  }
+  EventBus o-- EventSubscriber
+  EventSubscriber &lt;|.. AuditTrailSubscriber
+  EventSubscriber &lt;|.. NotificationSubscriber
+  EventSubscriber &lt;|.. RealtimeSubscriber
+  NotificationSubscriber --> NotificationService
+  NotificationService --> NotificationFactory
+  NotificationService --> ChannelSelectionPolicy
+  ChannelSelectionPolicy &lt;|.. PriorityBasedChannelPolicy
+  NotificationService o-- NotificationChannel
+  NotificationChannel &lt;|.. InAppChannel
+  NotificationChannel &lt;|.. EmailChannel
+  NotificationChannel &lt;|.. SmsChannel
+  EmailChannel --> EmailGateway
+  EmailGateway &lt;|.. GmailSmtpAdapter
+  EmailGateway &lt;|.. ConsoleEmailAdapter
+  SmsChannel --> SmsGateway
+  SmsGateway &lt;|.. SimulatedSmsGateway
+  InAppChannel --> RealtimeHub
+  RealtimeSubscriber --> RealtimeHub
+</pre>
+<div class="cap">Figure 4.5 – Adding a new mechanism (e.g. Microsoft Teams) = one class implementing <code>NotificationChannel</code> + one line in the factory.</div>
+</div>
+
+<h2>4.6 Class diagram – persistence (Repository, generics, Specification)</h2>
+<div class="figure">
+<pre class="mermaid">
+classDiagram
+  class Repository~T~ {
+    &lt;&lt;interface&gt;&gt;
+    +findById(id) T
+    +findAll() T[]
+    +save(entity: T) T
+    +delete(id) boolean
+  }
+  class IncidentRepository {
+    &lt;&lt;interface&gt;&gt;
+    +search(criteria) Page
+    +findActive() Incident[]
+    +activeWorkload() Map
+    +nextId() string
+  }
+  class UserRepository {
+    &lt;&lt;interface&gt;&gt;
+    +findByEmail(email) User
+    +findByRoles(roles) User[]
+  }
+  class MongoRepository~T,S~ {
+    &lt;&lt;abstract&gt;&gt;
+    #model: Model
+    #toDomain(s: S)* T
+    #toSnapshot(e: T)* S
+  }
+  class InMemoryRepository~T,S~ {
+    &lt;&lt;abstract&gt;&gt;
+    #rows: Map
+    #toDomain(s: S)* T
+    #toSnapshot(e: T)* S
+  }
+  class MongoIncidentRepository
+  class MongoUserRepository
+  class InMemoryIncidentRepository
+  class InMemoryUserRepository
+  class IncidentSpecification {
+    -criteria: IncidentSearchCriteria
+    +isSatisfiedBy(incident, now) boolean
+    +apply(list) Page
+  }
+  Repository &lt;|-- IncidentRepository
+  Repository &lt;|-- UserRepository
+  Repository &lt;|.. MongoRepository
+  Repository &lt;|.. InMemoryRepository
+  MongoRepository &lt;|-- MongoIncidentRepository
+  MongoRepository &lt;|-- MongoUserRepository
+  InMemoryRepository &lt;|-- InMemoryIncidentRepository
+  InMemoryRepository &lt;|-- InMemoryUserRepository
+  IncidentRepository &lt;|.. MongoIncidentRepository
+  IncidentRepository &lt;|.. InMemoryIncidentRepository
+  UserRepository &lt;|.. MongoUserRepository
+  UserRepository &lt;|.. InMemoryUserRepository
+  MongoIncidentRepository ..> IncidentSpecification
+  InMemoryIncidentRepository ..> IncidentSpecification
+</pre>
+<div class="cap">Figure 4.6 – Same interfaces for ServiceRepository, CategoryRepository, SlaPolicyRepository, AuditRepository, NotificationRepository, SettingsRepository.</div>
+</div>
+
+<h2>4.7 Class diagram – application services and exception hierarchy</h2>
+<div class="figure">
+<pre class="mermaid">
+classDiagram
+  class IncidentService {
+    +analyzeDraft(input) Analysis
+    +create(user, input) Result
+    +search(user, criteria) Page
+    +assign(user, id, techId) View
+    +acknowledge(user, id) View
+    +resolve(user, id, summary, cause) View
+    +close(user, id) View
+    +related(user, id) Related
+    +recommendTechnicians(user, id) Ranking
+  }
+  class IncidentAccessPolicy {
+    +canView(u, i) boolean
+    +assertAssignee(u, i) void
+    +assertCanAssign(u) void
+    +permittedActions(u, i) UserAction[]
+  }
+  class SlaService {
+    +resolvePolicy(serviceId, priority) SlaPolicy
+  }
+  class SlaMonitor {
+    +start(intervalMs) void
+    +runOnce() MonitorRunResult
+  }
+  class EscalationService {
+    +evaluate(incident) boolean
+  }
+  IncidentService --> IncidentAccessPolicy
+  IncidentService --> PriorityCalculator
+  IncidentService --> AssignmentStrategyRegistry
+  IncidentService --> SlaService
+  IncidentService --> CategoryClassifier
+  IncidentService --> DuplicateDetector
+  IncidentService --> ResolutionRecommender
+  IncidentService --> CorrelationEngine
+  IncidentService --> EventBus
+  IncidentService --> Repositories
+  SlaMonitor --> EscalationService
+  SlaMonitor --> EventBus
+
+  class AppError {
+    &lt;&lt;abstract&gt;&gt;
+    +httpStatus*: number
+    +code*: string
+  }
+  class ValidationError
+  class InvalidCredentialsError
+  class AuthenticationError
+  class AuthorizationError
+  class NotFoundError
+  class IncidentNotFoundError
+  class ServiceNotFoundError
+  class ConflictError
+  class InvalidStateTransitionError
+  class TechnicianUnavailableError
+  class WorkloadExceededError
+  class DuplicateIncidentError
+  class SlaConfigurationError
+  class DatabaseError
+  class ExternalServiceError
+  AppError &lt;|-- ValidationError
+  AppError &lt;|-- InvalidCredentialsError
+  AppError &lt;|-- AuthenticationError
+  AppError &lt;|-- AuthorizationError
+  AppError &lt;|-- NotFoundError
+  NotFoundError &lt;|-- IncidentNotFoundError
+  NotFoundError &lt;|-- ServiceNotFoundError
+  AppError &lt;|-- ConflictError
+  ConflictError &lt;|-- InvalidStateTransitionError
+  ConflictError &lt;|-- TechnicianUnavailableError
+  ConflictError &lt;|-- WorkloadExceededError
+  ConflictError &lt;|-- DuplicateIncidentError
+  AppError &lt;|-- SlaConfigurationError
+  AppError &lt;|-- DatabaseError
+  AppError &lt;|-- ExternalServiceError
+</pre>
+<div class="cap">Figure 4.7 – Services depend on abstractions; errors map themselves to HTTP status codes.</div>
+</div>
+
+<h2>4.8 State machine diagram – incident lifecycle</h2>
+<div class="figure">
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> NEW : report
+  NEW --> CLASSIFIED : classify (auto / manual)
+  CLASSIFIED --> CLASSIFIED : reclassify
+  CLASSIFIED --> ASSIGNED : assign (strategy / manual)
+  ASSIGNED --> ASSIGNED : reassign
+  ASSIGNED --> ACKNOWLEDGED : acknowledge (response SLA met)
+  ACKNOWLEDGED --> IN_PROGRESS : start
+  ACKNOWLEDGED --> ASSIGNED : reassign
+  IN_PROGRESS --> PENDING_INFO : requestInfo (SLA paused)
+  PENDING_INFO --> IN_PROGRESS : provideInfo (SLA resumed)
+  PENDING_INFO --> ASSIGNED : reassign
+  IN_PROGRESS --> ASSIGNED : reassign
+  IN_PROGRESS --> RESOLVED : resolve
+  RESOLVED --> VERIFIED : verify / feedback
+  RESOLVED --> IN_PROGRESS : reopen
+  VERIFIED --> IN_PROGRESS : reopen
+  VERIFIED --> CLOSED : close
+  CLOSED --> [*]
+</pre>
+<div class="cap">Figure 4.8 – Every arrow is an entry in a concrete state class; anything else throws <code>InvalidStateTransitionError</code>.</div>
+</div>
+
+<h2>4.9 Sequence diagram – Workflow 1: report → prioritise → assign → notify</h2>
+<div class="figure">
+<pre class="mermaid">
+sequenceDiagram
+  actor Emp as Employee
+  participant UI as React UI
+  participant API as Express API
+  participant IS as IncidentService
+  participant INC as Incident
+  participant CLF as CategoryClassifier
+  participant PC as PriorityCalculator
+  participant SLA as SlaService
+  participant DD as DuplicateDetector
+  participant AS as AssignmentStrategy
+  participant R as IncidentRepository
+  participant BUS as EventBus
+  participant OBS as Observers
+  Emp->>UI: fill form (live analysis)
+  UI->>API: POST /api/incidents (JWT)
+  API->>IS: create(user, input)
+  IS->>INC: Incident.create()
+  IS->>CLF: suggest(text, categories)
+  IS->>INC: classify(code)
+  IS->>PC: calculate(impact, urgency, criticality, users)
+  IS->>INC: applyPriority(P1)
+  IS->>SLA: resolvePolicy(service, P1)
+  IS->>INC: attachSla(policy)
+  IS->>DD: findDuplicates(draft, open incidents)
+  IS->>AS: select(context, candidates)
+  IS->>INC: assignTo(technician)
+  IS->>R: save(incident)
+  IS->>BUS: publishAll(incident.pullEvents())
+  BUS->>OBS: AuditTrail / Notifications / Realtime
+  OBS-->>Emp: in-app + e-mail receipt
+  OBS-->>UI: SSE push to technician (toast, SMS if P1)
+  API-->>UI: 201 incident, duplicates, assignment
+</pre>
+<div class="cap">Figure 4.9 – Creation sequence.</div>
+</div>
+
+<!-- ====================================================================== -->
+<h1>5. Object-Oriented Design</h1>
+<table>
+<tr><th>Concept</th><th>Where and how it is applied</th></tr>
+<tr><td>Encapsulation</td><td>All entity state is <code>private</code>/<code>protected</code> (e.g. <code>Incident.data</code>, <code>Incident.state</code>, <code>Technician.extras</code>, <code>SlaTracker.s</code>). Changes only through intention-revealing methods (<code>acknowledge()</code>, <code>resolve()</code>, <code>setAvailability()</code>) that enforce invariants; getters return copies of arrays (<code>skills</code>, <code>notes</code>). Password hashes never leave the backend (<code>toPublic()</code>). Repositories store deep-copied snapshots.</td></tr>
+<tr><td>Abstraction</td><td>Complex operations hidden behind simple abstractions: <code>IncidentService.create()</code> hides a 9-step workflow; <code>PriorityStrategy</code>, <code>AssignmentStrategy</code>, <code>NotificationChannel</code>, <code>EmailGateway</code>, <code>Repository&lt;T&gt;</code> expose minimal contracts. Abstract classes <code>User</code>, <code>IncidentState</code>, <code>AbstractAssignmentStrategy</code>, <code>AppError</code>, <code>MongoRepository</code>.</td></tr>
+<tr><td>Inheritance (true is-a)</td><td>Employee/Technician/Administrator <i>are</i> Users; TeamLead <i>is a</i> Technician (still works incidents) with supervision rights; Manager <i>is an</i> Administrator with export rights; concrete states <i>are</i> IncidentStates; specific errors <i>are</i> AppErrors. Not used where only behaviour varies — those use composition/strategies.</td></tr>
+<tr><td>Polymorphism</td><td><code>user.hasPermission()</code> dispatches to each subclass's <code>permissionSet()</code>; <code>state.next(action)</code> differs per state; <code>strategy.select()</code>; <code>channel.deliver()</code>; the error handler uses <code>err.httpStatus</code> of any <code>AppError</code>; repositories are swapped MongoDB ↔ in-memory without callers noticing.</td></tr>
+<tr><td>Interfaces</td><td><code>PriorityStrategy</code>, <code>AssignmentStrategy</code>, <code>NotificationChannel</code>, <code>ChannelSelectionPolicy</code>, <code>EmailGateway</code>, <code>SmsGateway</code>, <code>EventSubscriber</code>, <code>Repository&lt;T&gt;</code> and its 8 specialisations, <code>Clock</code>, <code>SequenceGenerator</code>.</td></tr>
+<tr><td>Composition</td><td><code>Incident</code> owns its <code>SlaTracker</code>, <code>WorkNote</code>s, <code>Resolution</code>, <code>Closure</code>, <code>Feedback</code> (created and destroyed with it). <code>NotificationService</code> is composed of channels, a factory and a policy; <code>IncidentService</code> is composed of strategies and intelligence components injected by the composition root.</td></tr>
+<tr><td>Association / aggregation</td><td>Incident → reporter (Employee), → assigned Technician, → ItService, → Category (by id references, independent life-cycles). <code>ItService</code> aggregates upstream <code>ItService</code>s (dependency graph). <code>EventBus</code> aggregates subscribers; registries aggregate strategies.</td></tr>
+<tr><td>Exception handling</td><td>Custom hierarchy of 16 exception classes (Section 11); domain throws, a single Express error handler translates; observers isolate failures; graceful degradation when SLA configuration is missing or e-mail fails.</td></tr>
+<tr><td>Collections / data structures</td><td><code>Map</code> for registries (O(1) lookup of strategies, states, repositories), <code>Set</code> for permissions/vocabulary/skills, arrays for ordered notes/history, <code>Map&lt;string,number&gt;</code> for workload and TF-IDF vectors, stack-based DFS with a visited <code>Set</code> over the dependency graph, sorted arrays for rankings, paging.</td></tr>
+<tr><td>Generics</td><td><code>Repository&lt;T&gt;</code>, <code>MongoRepository&lt;T,S&gt;</code>, <code>InMemoryRepository&lt;T,S&gt;</code>, <code>Page&lt;T&gt;</code>, <code>useLoad&lt;T&gt;</code> hook, typed <code>api&lt;T&gt;()</code> client.</td></tr>
+<tr><td>SOLID</td><td>SRP (one reason to change per class), OCP (new strategies/channels/categories without modification), LSP (any repository/strategy substitutable), ISP (small interfaces), DIP (services depend on interfaces; concrete classes chosen only in <code>container.ts</code>).</td></tr>
+</table>
+
+<!-- ====================================================================== -->
+<h1>6. Design Patterns</h1>
+<p>The brief requires at least two patterns; we implemented nine, each solving a concrete problem.</p>
+<table>
+<tr><th>Pattern</th><th>Classes</th><th>Problem solved / justification</th></tr>
+<tr><td><b>Strategy</b></td><td>PriorityStrategy (Weighted, Matrix) + PriorityCalculator; AssignmentStrategy (Smart, Skill, Load, RoundRobin) + Registry; ChannelSelectionPolicy</td><td>Algorithms vary independently and must be switchable at runtime by the admin "without redesigning the application". Context classes hold the active strategy; the choice is persisted.</td></tr>
+<tr><td><b>Template Method</b></td><td>AbstractAssignmentStrategy</td><td>All assignment strategies share the skeleton filter-eligible → order → pick; subclasses override only <code>order()</code> (and optionally <code>filterEligible()</code>). Removes duplicated eligibility logic.</td></tr>
+<tr><td><b>State</b></td><td>IncidentState + 9 concrete states, IncidentStates registry</td><td>Lifecycle rules and per-state behaviour (SLA clock running, editable, active) live in state objects; illegal transitions are impossible; no switch statements in Incident.</td></tr>
+<tr><td><b>Observer</b></td><td>EventBus, EventSubscriber, AuditTrailSubscriber, NotificationSubscriber, RealtimeSubscriber</td><td>Audit, notifications and live dashboards react to incident events without the incident workflow knowing about them; new reactions (e.g. Slack webhook) need no change in IncidentService.</td></tr>
+<tr><td><b>Factory</b></td><td>UserFactory, NotificationFactory, <code>Incident.create</code> / <code>SlaTracker.start</code> (static factory methods)</td><td>Centralises which subclass represents a role (also used when an admin changes a role); builds channel objects and event-specific messages.</td></tr>
+<tr><td><b>Repository</b></td><td>Repository&lt;T&gt; + MongoDB and in-memory implementations</td><td>Business code is independent of MongoDB; tests run without a database; storage technology can change.</td></tr>
+<tr><td><b>Adapter</b></td><td>GmailSmtpAdapter (nodemailer), ConsoleEmailAdapter, SimulatedSmsGateway</td><td>Third-party APIs adapted to our <code>EmailGateway</code>/<code>SmsGateway</code> interfaces; switching provider = new adapter.</td></tr>
+<tr><td><b>Specification</b></td><td>IncidentSpecification</td><td>Search criteria encapsulated as an object reused by both repositories (single definition of filtering, incl. time-dependent SLA status).</td></tr>
+<tr><td><b>Dependency Injection / Composition Root</b></td><td>container.ts</td><td>All objects are wired in one place; enables swapping MongoDB ↔ memory and Gmail ↔ console for tests.</td></tr>
+<tr><td>Flyweight / Singleton-like registry</td><td>IncidentStates</td><td>State objects are stateless and shared by all incidents.</td></tr>
+</table>
+<pre class="code">// State pattern - an illegal action is rejected by the current state object
+next(action: IncidentAction): IncidentState {
+  const target = this.transitions[action];
+  if (!target) throw new InvalidStateTransitionError(this.status, action);
+  return IncidentStates.of(target);
+}
+
+// Strategy pattern - IncidentService does not know which algorithm runs
+const strategy = this.d.assignment.active;
+const chosen = strategy.select(this.context(inc), await this.buildCandidates(inc));</pre>
+
+<!-- ====================================================================== -->
+<h1>7. Core Algorithms</h1>
+<h2>7.1 Intelligent priority determination</h2>
+<p>Inputs: impact (1 single user … 4 whole organisation), urgency (1 can wait … 4 business stopped), business criticality of the affected service (1–4, configured per service), number of affected users, and the service's user base.</p>
+<p><b>Default – WeightedPriorityStrategy.</b> Affected users are converted to a level: ≥500 users or ≥50 % of the user base → 4; ≥50 or ≥20 % → 3; ≥5 → 2; else 1. Then</p>
+<pre class="code">weighted = 0.35·Impact + 0.30·Urgency + 0.20·Criticality + 0.15·UsersLevel      (1..4)
+score    = round((weighted − 1) / 3 × 100)                                     (0..100)
+P1 ≥ 75,  P2 ≥ 50,  P3 ≥ 25,  otherwise P4
+Rule overrides: Impact 4 on criticality-4 service ⇒ P1;  ≥500 users ⇒ at least P2;
+                Urgency 4 on criticality ≥3 service ⇒ at least P2</pre>
+<p><b>Rationale.</b> Impact and urgency are the ITIL drivers, so they carry 65 % of the weight. Business criticality captures that the same outage matters more on the payment gateway than on the HR portal. Affected users makes the score sensitive to scale, relative to the service size. A purely multiplicative formula can under-rate an extreme single factor (e.g. a total outage of a critical service with low declared urgency); the rule overrides provide safe floors. Every assessment stores a human-readable rationale shown in the UI.</p>
+<p><b>Alternative – MatrixPriorityStrategy</b> (from the brief): score = Impact × Urgency × Criticality (1–64); P1 ≥ 36, P2 ≥ 18, P3 ≥ 8, else P4. The admin can switch between them at runtime.</p>
+<table>
+<tr><th>Example</th><th>I</th><th>U</th><th>C</th><th>Users</th><th>Weighted score</th><th>Priority</th></tr>
+<tr><td>Payment application unavailable</td><td>4</td><td>4</td><td>4</td><td>800 / 2000</td><td>100</td><td>P1</td></tr>
+<tr><td>ERP reports timing out</td><td>3</td><td>3</td><td>3</td><td>40 / 400</td><td>62</td><td>P2</td></tr>
+<tr><td>VPN disconnects (12 users)</td><td>2</td><td>2</td><td>4</td><td>12</td><td>45</td><td>P3</td></tr>
+<tr><td>Laptop battery not charging</td><td>1</td><td>2</td><td>2</td><td>1</td><td>18</td><td>P4</td></tr>
+</table>
+
+<h2>7.2 Technician assignment strategies</h2>
+<p>Every strategy receives candidates with live facts (active workload, history with the service/category). Common eligibility (Template Method): active, marked available, workload &lt; maximum.</p>
+<table>
+<tr><th>Strategy</th><th>Selection rule</th></tr>
+<tr><td>Smart (default)</td><td>Score = 40·skill match + 25·(1 − load ratio) + 15·min(experience/10, 1) + 15·min(resolved on this service/5, 1) + 5 if senior (≥5 yrs) on P1/P2. Returns ranked, explained recommendations.</td></tr>
+<tr><td>Skill-based</td><td>Only technicians whose skills contain the category; least loaded, then most experienced.</td></tr>
+<tr><td>Load-based</td><td>Lowest utilisation (workload ÷ capacity); skill match breaks ties.</td></tr>
+<tr><td>Round-robin</td><td>Rotates through eligible (skilled first) technicians ordered by id; keeps a cursor.</td></tr>
+</table>
+<p>If no technician is eligible, the incident stays CLASSIFIED, an <code>ASSIGNMENT_FAILED</code> event alerts team leads and admins, and it can be assigned manually later. Manual assignment checks <code>TechnicianUnavailableError</code> and <code>WorkloadExceededError</code>.</p>
+
+<h2>7.3 SLA management</h2>
+<table>
+<tr><th>Priority</th><th>Response target</th><th>Resolution target</th><th>Payment Gateway override</th></tr>
+<tr><td>P1</td><td>5 min</td><td>30 min</td><td>5 min / 20 min</td></tr>
+<tr><td>P2</td><td>15 min</td><td>2 h</td><td>10 min / 60 min</td></tr>
+<tr><td>P3</td><td>1 h</td><td>8 h</td><td>—</td></tr>
+<tr><td>P4</td><td>4 h</td><td>24 h</td><td>—</td></tr>
+</table>
+<ul>
+<li><b>Identify applicable SLA</b>: service-specific active policy for (priority, service), else the default policy; none ⇒ <code>SlaConfigurationError</code> handled gracefully (incident created, admins alerted).</li>
+<li><b>Deadlines</b>: responseDue = created + response target; resolutionDue = created + resolution target (+ paused time). Re-applied when the priority changes.</li>
+<li><b>Response time</b> = acknowledgement − creation; <b>resolution time</b> = resolution − creation − paused time.</li>
+<li><b>Status</b>: ON_TRACK, AT_RISK (≥ warning threshold), PAUSED, BREACHED, MET.</li>
+<li><b>Background monitoring</b>: <code>SlaMonitor</code> runs every 30 s (configurable), raises one warning per incident, records response/resolution breaches once, triggers escalation, saves and publishes events (audit + notifications).</li>
+</ul>
+<h2>7.4 Automatic escalation</h2>
+<p>For P1/P2 incidents still in NEW/CLASSIFIED/ASSIGNED: level = ⌊minutes waiting ÷ response target⌋ capped at 3. Level 1 notifies the team lead(s), level 2 also administrators, level 3 also IT managers (in-app, e-mail and SMS). Escalation never changes the lifecycle state; it raises visibility and is recorded in the audit trail.</p>
+
+<!-- ====================================================================== -->
+<h1>8. Intelligent Features</h1>
+<p>The brief requires two; we implemented all seven suggested features (A–G), all explainable and without external ML services.</p>
+<table>
+<tr><th>Feature</th><th>Technique</th><th>Where visible</th></tr>
+<tr><td>A. Duplicate detection</td><td>NLP pipeline (tokenise, stop words, stemming, IT synonym normalisation e.g. unavailable/down/outage → <i>outage</i>, failing/unable/cannot → <i>fail</i>, transaction/checkout/UPI → <i>payment</i>) + TF-IDF cosine similarity. score = 0.65·text + 0.35·same service; threshold 0.5 over open incidents of the last 72 h. Links both incidents and notifies team leads.</td><td>Live warning on the report form; "Linked / possible duplicates" on the incident; DUPLICATE_DETECTED in audit.</td></tr>
+<tr><td>B. Incident correlation &amp; root cause</td><td>Groups open incidents (4 h window) on the same service. For root cause, traverses the service dependency graph (DFS, cycle-safe): an upstream service that has its own open report and, within ±90 min of that report, incidents on downstream services (≥3 incidents across ≥3 services in total) is flagged as the probable root cause. Requiring a direct report plus time proximity prevents generic dependencies (the network, which everything depends on) from "explaining" unrelated incidents; overlapping weaker explanations are pruned.</td><td>SLA &amp; correlations page; incident intelligence panel.</td></tr>
+<tr><td>C. Automatic escalation</td><td>Section 7.4, run by the background monitor.</td><td>Escalation badges, notifications, audit.</td></tr>
+<tr><td>D. Smart technician recommendation</td><td>Weighted multi-factor scoring with reasons (Section 7.2).</td><td>Assign dialog (ranked list with explanations).</td></tr>
+<tr><td>E. SLA risk prediction</td><td>risk = 0.5·time used + 0.2·lifecycle stage + 0.15·technician load + 0.15·historical difficulty (average resolution time of the category ÷ SLA window). LOW / MEDIUM / HIGH / BREACHED with reasons.</td><td>Technician dashboard, SLA centre.</td></tr>
+<tr><td>F. Automatic categorisation</td><td>Hybrid: keyword evidence from admin-maintained category keywords (60 %) + multinomial Naive Bayes trained on historical incidents with Laplace smoothing (40 %). Retrained after every closure. New categories work immediately through keywords.</td><td>Live suggestion with confidence while typing; auto-classification on submit.</td></tr>
+<tr><td>G. Suggested resolution</td><td>TF-IDF similarity against resolved incidents + same category/service bonus + feedback rating boost; top 3 previous fixes with root cause.</td><td>Report form ("Known fixes") and technician incident view.</td></tr>
+</table>
+<div class="note">Example from the brief: "Payment application unavailable", "Payment transaction failing", "Unable to make payment" normalise to {payment, outage}, {payment, fail}, {fail, payment} and are on the same service, so they are linked as related incidents (verified by automated test TC10/TC18).</div>
+
+<!-- ====================================================================== -->
+<h1>9. Technology Stack &amp; Selection Report</h1>
+<h2>9.1 Technologies, frameworks, libraries and services</h2>
+<table>
+<tr><th>Area</th><th>Technology</th><th>Purpose</th></tr>
+<tr><td>Language</td><td>TypeScript 5 (frontend and backend)</td><td>Static typing, interfaces, abstract classes, access modifiers, generics, enums</td></tr>
+<tr><td>Runtime</td><td>Node.js 22 LTS</td><td>Backend runtime</td></tr>
+<tr><td>Web framework</td><td>Express 4</td><td>REST API routing and middleware</td></tr>
+<tr><td>Database</td><td>MongoDB Atlas (cloud) + Mongoose 8</td><td>Persistence, indexes, aggregation</td></tr>
+<tr><td>Auth / security</td><td>jsonwebtoken, bcryptjs, helmet, cors, express-rate-limit, zod</td><td>JWT, password hashing, headers, CORS, brute-force protection, validation</td></tr>
+<tr><td>Integration</td><td>nodemailer + Gmail SMTP</td><td>Real e-mail notifications (adapter)</td></tr>
+<tr><td>Real time</td><td>Server-Sent Events</td><td>Live notifications and dashboard refresh</td></tr>
+<tr><td>Frontend</td><td>React 18, React Router 6, Vite 6, Recharts</td><td>SPA, routing, build tooling, charts</td></tr>
+<tr><td>Testing</td><td>Jest, ts-jest, Supertest, mongodb-memory-server</td><td>Unit, API integration and database tests</td></tr>
+<tr><td>Tooling</td><td>Git/GitHub, tsx (dev runner), npm</td><td>Version control, development</td></tr>
+</table>
+<h2>9.2 Technology selection questions</h2>
+<p><b>1. Why this programming language?</b> TypeScript gives us the OOP constructs this course evaluates — interfaces, abstract classes and methods, <code>private/protected/readonly</code>, generics and enums — checked at compile time, while running on the very productive Node.js ecosystem. One language for frontend and backend means shared types and every member can read all of the code.</p>
+<p><b>2. Why this frontend technology?</b> React's component model fits three role-specific portals built from shared components (tables, badges, dialogs). Vite gives instant reloads; Recharts gives charts with little code; the result is a responsive SPA usable on desktop and mobile browsers.</p>
+<p><b>3. Why this backend technology?</b> Express is minimal and unopinionated, so our own domain model and patterns stay visible instead of being hidden by framework conventions; its middleware model fits authentication, RBAC, validation and central error handling. Node's event loop handles many concurrent SSE connections and the background SLA monitor efficiently.</p>
+<p><b>4. Why this database?</b> Incidents are naturally document-shaped aggregates (notes, SLA tracker, resolution, feedback embedded), so MongoDB stores an aggregate in one document and loads it in one read — matching our aggregate/Repository design. Atlas is a managed cloud service (backups, monitoring, free tier) reachable from any demo machine. Indexes on status, priority, category, service, technician, reporter and date support the search criteria.</p>
+<p><b>5. Why this architecture?</b> A layered monolith with clean boundaries is the simplest architecture that satisfies the requirements and is easy to demonstrate and test; the Repository/Adapter/Observer boundaries mean parts can later be extracted into services without rewriting business logic.</p>
+<p><b>6. Alternatives considered.</b> Spring Boot + PostgreSQL (strong OOP, but heavier setup and two languages); Django/FastAPI (fast, but weaker static typing for OOP demonstration); relational DB (would need 6–7 joined tables for one incident view); microservices (operational overhead unjustified for this scope); WebSockets instead of SSE (bidirectional not needed; SSE is simpler and works through proxies).</p>
+<p><b>7. Advantages and limitations.</b> Advantages: one language end-to-end, fast development, cloud database, real-time push, easy testing with in-memory repositories, single-command deployment. Limitations: TypeScript types are erased at runtime (we add zod validation at the boundary); MongoDB has no cross-document foreign keys (integrity enforced in services); in-process SLA monitor and SSE hub need coordination when scaled to several instances.</p>
+<p><b>8. How the technology supports OOP.</b> TypeScript classes, interfaces, abstract members, access modifiers, generics and enums map one-to-one to the UML diagrams in Section 4. Express middleware and Mongoose are used only in the outer layer; the domain is plain TypeScript classes, so all business logic is object-oriented and framework-independent.</p>
+<p><b>9. Evolution with many more users.</b> Run several stateless API instances behind a load balancer (JWT is stateless); move the SLA monitor to a single scheduled worker or queue (e.g. BullMQ/Redis) with leader election; replace the in-process EventBus with a message broker (Kafka/RabbitMQ) — observers become independent consumers; Redis pub/sub for SSE fan-out; MongoDB Atlas sharding and read replicas; push heavy analytics to pre-aggregated collections; containerise with Docker and deploy on Kubernetes with CI/CD. The interfaces already in place (Repository, EventSubscriber, EmailGateway) make these swaps local changes.</p>
+
+<!-- ====================================================================== -->
+<h1>10. Security</h1>
+<table>
+<tr><th>Requirement</th><th>Implementation</th></tr>
+<tr><td>Authentication</td><td>E-mail + password login; JWT (HS256, 8 h expiry, secret from environment); token verified on every request and the user re-loaded (deactivated users are rejected immediately).</td></tr>
+<tr><td>Password protection</td><td>bcrypt hash (cost 10); password policy ≥8 chars with letter and digit; hashes never returned by the API; change-password requires the current password.</td></tr>
+<tr><td>Role-based authorisation</td><td>Permissions per role class; <code>requirePermission</code> middleware for admin/report routes; service-level checks; ownership rules in <code>IncidentAccessPolicy</code> (employees only see their incidents, technicians only their assigned ones, only the assignee acknowledges, only the reporter verifies…).</td></tr>
+<tr><td>Input validation</td><td>zod schemas whitelist and type-check every body/query (lengths, enums, ranges); domain constructors re-validate invariants; JSON body limit 100 kB.</td></tr>
+<tr><td>Secure API access</td><td>helmet security headers, CORS restricted to the frontend origin, rate limiting on login/registration (20 per 15 min), generic login error (no account enumeration), 401/403 distinction.</td></tr>
+<tr><td>Unauthorized operations</td><td>Self-registration only creates employees; admins cannot deactivate or demote themselves; illegal lifecycle moves rejected; CSV export guards against spreadsheet formula injection; MongoDB queries built from validated values only (no operator injection).</td></tr>
+<tr><td>Secrets</td><td>Database URI, JWT secret and Gmail app password only in <code>.env</code> (git-ignored); <code>.env.example</code> documents them.</td></tr>
+<tr><td>Not implemented (documented)</td><td>HTTPS termination (provided by hosting), refresh tokens / token revocation list, MFA, account lockout policy, audit-log tamper evidence (hash chaining).</td></tr>
+</table>
+
+<!-- ====================================================================== -->
+<h1>11. Exception and Error Handling</h1>
+<p>All business errors extend the abstract <code>AppError</code>, which declares <code>httpStatus</code> and <code>code</code>. One Express error handler translates any of them polymorphically into <code>{"error": {"code", "message", "details"}}</code>; the React client shows the code and message.</p>
+<table>
+<tr><th>Situation (from the brief)</th><th>Exception</th><th>HTTP</th><th>Handling</th></tr>
+<tr><td>Invalid login</td><td>InvalidCredentialsError</td><td>401</td><td>Generic message; rate limited</td></tr>
+<tr><td>Unauthorized operation</td><td>AuthorizationError / AuthenticationError</td><td>403 / 401</td><td>Client redirects to login on expired token</td></tr>
+<tr><td>Invalid incident</td><td>IncidentNotFoundError</td><td>404</td><td></td></tr>
+<tr><td>Invalid state transition</td><td>InvalidStateTransitionError</td><td>409</td><td>Thrown by the State object; UI only offers legal actions</td></tr>
+<tr><td>Technician unavailable</td><td>TechnicianUnavailableError</td><td>409</td><td>Auto-assignment skips them; incident queued</td></tr>
+<tr><td>Technician workload exceeded</td><td>WorkloadExceededError</td><td>409</td><td>Shows current/max</td></tr>
+<tr><td>Service not found</td><td>ServiceNotFoundError</td><td>404</td><td></td></tr>
+<tr><td>Missing SLA configuration</td><td>SlaConfigurationError</td><td>422</td><td>Caught in IncidentService: incident still created, SLA_MISSING event alerts admins</td></tr>
+<tr><td>Duplicate incident</td><td>DuplicateIncidentError</td><td>409</td><td>UI offers "different problem — submit anyway"</td></tr>
+<tr><td>Database failure</td><td>DatabaseError</td><td>503</td><td>All Mongo calls wrapped by <code>guard()</code></td></tr>
+<tr><td>Network failure</td><td>ExternalServiceError (server) / NETWORK_FAILURE (client)</td><td>502</td><td>E-mail failures logged as FAILED deliveries without breaking the operation; client shows "cannot reach server"</td></tr>
+<tr><td>Invalid user input</td><td>ValidationError</td><td>400</td><td>Field-level details from zod</td></tr>
+</table>
+
+<!-- ====================================================================== -->
+<h1>12. Database Design</h1>
+<h2>12.1 ER diagram</h2>
+<div class="figure">
+<pre class="mermaid">
+erDiagram
+  USERS ||--o{ INCIDENTS : "reports (reporterId)"
+  USERS |o--o{ INCIDENTS : "is assigned (assignedTechnicianId)"
+  SERVICES ||--o{ INCIDENTS : "affected (serviceId)"
+  CATEGORIES |o--o{ INCIDENTS : "classifies (categoryCode)"
+  SERVICES |o--o{ SLA_POLICIES : "overrides (serviceId, null = default)"
+  SERVICES }o--o{ SERVICES : "dependsOn"
+  INCIDENTS ||--o{ AUDIT_RECORDS : "history (incidentId)"
+  USERS ||--o{ AUDIT_RECORDS : "performed (userId)"
+  USERS ||--o{ NOTIFICATIONS : "receives (userId)"
+  INCIDENTS |o--o{ NOTIFICATIONS : "about (incidentId)"
+  INCIDENTS }o--o{ INCIDENTS : "relatedIncidentIds / duplicateOfId"
+  USERS {
+    string _id PK "E1001, T1003, A1001"
+    string name
+    string email UK
+    string passwordHash
+    string role
+    string phone
+    string department
+    boolean active
+    string_array skills "technicians"
+    int maxWorkload
+    int experienceYears
+    boolean available
+  }
+  INCIDENTS {
+    string _id PK "INC1037"
+    string title
+    string description
+    string reporterId FK
+    string serviceId FK
+    string categoryCode FK
+    int impact
+    int urgency
+    int businessCriticality
+    int affectedUsers
+    string priority
+    int priorityScore
+    string status
+    string assignedTechnicianId FK
+    object sla "embedded SlaTracker"
+    array notes "embedded WorkNotes"
+    object resolution
+    object closure
+    object feedback
+    int escalationLevel
+    date createdAt
+  }
+  SERVICES {
+    string _id PK "SVC-PAY"
+    string name
+    int businessCriticality
+    int userBase
+    string_array dependsOn
+    boolean active
+  }
+  CATEGORIES {
+    string _id PK "NETWORK"
+    string name
+    string_array keywords
+    boolean active
+  }
+  SLA_POLICIES {
+    string _id PK
+    string priority
+    string serviceId FK
+    int responseMinutes
+    int resolutionMinutes
+    int warningThresholdPct
+    boolean active
+  }
+  AUDIT_RECORDS {
+    string _id PK
+    date timestamp
+    string userId FK
+    string action
+    string incidentId FK
+    string previousState
+    string newState
+    string description
+  }
+  NOTIFICATIONS {
+    string _id PK
+    string userId FK
+    string channel
+    string eventType
+    string incidentId FK
+    string title
+    string status
+    boolean read
+    date createdAt
+  }
+</pre>
+<div class="cap">Figure 12.1 – Collections and relationships (also: <code>settings</code> key/value, <code>counters</code> for readable ids)</div>
+</div>
+<h2>12.2 Schema decisions</h2>
+<ul>
+<li><b>Embedding vs referencing</b>: SLA tracker, notes, resolution, closure and feedback are embedded in the incident (composition — they never exist alone, always read together). Users, services and categories are referenced by id (association — independent life-cycles). Audit records and notifications are separate collections because they grow without bound and are queried independently.</li>
+<li><b>Readable business ids</b> (INC1001, E1001, SVC-PAY) generated atomically via a <code>counters</code> collection (<code>findOneAndUpdate $inc</code>).</li>
+<li><b>Indexes</b>: incidents(status, priority, categoryCode, serviceId, assignedTechnicianId, reporterId, createdAt, text index on title+description); users(email unique, role); audit(timestamp, incidentId, userId, action); notifications(userId, createdAt).</li>
+<li>Workload is computed with an aggregation pipeline (<code>$match</code> active statuses → <code>$group</code> by technician), not stored, so it can never be inconsistent.</li>
+</ul>
+<h2>12.3 Sample data (seeded automatically)</h2>
+<table>
+<tr><th>Collection</th><th>Records</th><th>Examples</th></tr>
+<tr><td>users</td><td>11</td><td>E1001 Aarav Sharma (employee), T1003 Arjun Mehta (APPLICATION, SOFTWARE, AUTHENTICATION), T1006 Neha Kapoor (team lead), A1001 Suresh Pillai (admin), A1002 Anita Desai (IT manager)</td></tr>
+<tr><td>services</td><td>10</td><td>SVC-PAY Payment Gateway (criticality 4, depends on SVC-DB, SVC-AUTH, SVC-NET); SVC-DB Core Database Cluster; SVC-HR HR Portal (criticality 2)</td></tr>
+<tr><td>categories</td><td>10</td><td>HARDWARE, SOFTWARE, NETWORK, DATABASE, CLOUD, SECURITY, AUTHENTICATION, APPLICATION, STORAGE, GENERAL</td></tr>
+<tr><td>sla_policies</td><td>6</td><td>4 defaults from the brief + 2 Payment Gateway contractual policies</td></tr>
+<tr><td>incidents</td><td>45</td><td>36 historical (closed/verified, with resolutions and feedback, ~25 % SLA breaches) + 9 live demo incidents (INC1037 payment outage P1, INC1038–INC1040 correlated database problems, INC1044 breached &amp; escalated)</td></tr>
+<tr><td>audit_records</td><td>~350</td><td>Complete history for every seeded incident</td></tr>
+</table>
+<pre class="code">{ "_id": "INC1037", "title": "Payment application unavailable", "reporterId": "E1001", "serviceId": "SVC-PAY",
+  "categoryCode": "APPLICATION", "impact": 4, "urgency": 4, "businessCriticality": 4, "affectedUsers": 800,
+  "priority": "P1", "priorityScore": 100, "status": "ASSIGNED", "assignedTechnicianId": "T1003",
+  "sla": { "policyName": "Payments P1 (contractual)", "responseDueAt": "...+5 min", "resolutionDueAt": "...+20 min",
+           "respondedAt": null, "responseBreached": false, ... },
+  "notes": [], "escalationLevel": 0, "relatedIncidentIds": [] }</pre>
+
+<!-- ====================================================================== -->
+<h1>13. Testing</h1>
+<p>Automated tests: <b>Jest</b> with ts-jest. Unit tests exercise domain classes and algorithms with a controllable <code>FixedClock</code>; integration tests drive the real Express app through <b>Supertest</b> with in-memory repositories; a database test runs the MongoDB repositories against <b>mongodb-memory-server</b>. Run with <code>npm test</code> (coverage: <code>npm run test:coverage</code>). The full list of documented test cases with steps and expected results is in <code>docs/TEST_CASES.md</code>; the summary is below.</p>
+<table>
+<tr><th>ID</th><th>Type</th><th>Test case</th><th>Expected result</th></tr>
+<tr><td>TC01</td><td>Normal</td><td>Payment outage, I=4 U=4 C=4, 800 users</td><td>P1, score ≥ 75, rationale present</td></tr>
+<tr><td>TC02</td><td>Normal</td><td>Single user, low urgency, criticality-2 service</td><td>P4</td></tr>
+<tr><td>TC03</td><td>Boundary</td><td>Matrix scores 36 / 27 / 8 / 6</td><td>P1 / P2 / P3 / P4 exactly at thresholds</td></tr>
+<tr><td>TC04</td><td>Normal</td><td>Full lifecycle NEW → … → CLOSED</td><td>Status CLOSED; events created once</td></tr>
+<tr><td>TC05</td><td>Business rule</td><td>Close or resolve a NEW incident</td><td>InvalidStateTransitionError, state unchanged</td></tr>
+<tr><td>TC06</td><td>Invalid input</td><td>Title "abc"; impact 5</td><td>ValidationError</td></tr>
+<tr><td>TC07</td><td>Boundary</td><td>SLA at 76 % of window, response overdue</td><td>One warning; response breach recorded</td></tr>
+<tr><td>TC08</td><td>Normal</td><td>Skill-based ranking</td><td>Only DATABASE-skilled techs, least loaded first</td></tr>
+<tr><td>TC09</td><td>Boundary</td><td>Technician at max workload / unavailable</td><td>Not eligible; workload max−1 still eligible</td></tr>
+<tr><td>TC10</td><td>Intelligent</td><td>"Payment transaction failing" vs open "Payment application unavailable"</td><td>Detected as duplicate, same service</td></tr>
+<tr><td>TC11</td><td>Intelligent</td><td>Category suggestion for password / wifi text; gibberish</td><td>AUTHENTICATION / NETWORK; no suggestion</td></tr>
+<tr><td>TC12</td><td>Intelligent</td><td>ERP, HR and DB incidents</td><td>Single shared-dependency cluster: root cause DB</td></tr>
+<tr><td>TC13</td><td>Business rule</td><td>Unacknowledged P1 after 6 and 16 min</td><td>Breach recorded, escalated to level 3, manager notified, e-mail sent</td></tr>
+<tr><td>TC14</td><td>Exception</td><td>Wrong password / unknown e-mail</td><td>401 INVALID_LOGIN, identical message</td></tr>
+<tr><td>TC15</td><td>Authorization</td><td>Employee → admin users, reports, another person's incident; technician → settings</td><td>403 each; employee search only own incidents</td></tr>
+<tr><td>TC16</td><td>Integration</td><td>Workflow 1+2 via API</td><td>Auto-classified AUTHENTICATION, prioritised, assigned, notified, closed; audit has previous/new states</td></tr>
+<tr><td>TC17</td><td>Exception</td><td>Resolve an unassigned CLASSIFIED incident</td><td>409 INVALID_STATE_TRANSITION</td></tr>
+<tr><td>TC18</td><td>Integration</td><td>Workflow 3: second payment report</td><td>Duplicate of INC1037; SAME_SERVICE correlation</td></tr>
+<tr><td>TC19</td><td>Persistence</td><td>MongoDB seed, search, aggregation, id sequence</td><td>Round-trip intact; workload T1003 = 2; next id INC1046</td></tr>
+<tr><td>TC20</td><td>Business rule</td><td>Same reporter submits identical incident twice</td><td>409 DUPLICATE_INCIDENT</td></tr>
+<tr><td>TC21</td><td>Exception</td><td>Manual assign to unavailable / full technician</td><td>409 TECHNICIAN_UNAVAILABLE / TECHNICIAN_WORKLOAD_EXCEEDED</td></tr>
+<tr><td>TC22</td><td>Invalid input</td><td>Invalid body; unknown service; unknown incident</td><td>400 with field details; 404 SERVICE_NOT_FOUND; 404</td></tr>
+<tr><td>TC23</td><td>Normal</td><td>Search with status + priority + service + sort; SLA status; keywords + technician</td><td>Only matching incidents</td></tr>
+<tr><td>TC24</td><td>Extensibility</td><td>Admin adds TELEPHONY category; duplicate / invalid SLA policy</td><td>Suggested immediately; 409; 400</td></tr>
+<tr><td>TC25</td><td>Boundary</td><td>Feedback rating 0, 6, and before resolution</td><td>Rejected; 5 accepted and auto-verifies</td></tr>
+<tr><td>TC26</td><td>Business rule</td><td>SLA pause in PENDING_INFO for 60 min</td><td>Resolution deadline moves by 60 min</td></tr>
+<tr><td>TC27</td><td>Exception</td><td>All SLA policies deleted, new incident</td><td>Incident created without SLA; SLA_MISSING audited</td></tr>
+</table>
+<p><b>Results (21 Nov 2026):</b> <code>Test Suites: 7 passed, 7 total · Tests: 45 passed, 45 total</code> (unit, API integration and MongoDB repository suites; the documented cases above map to named tests, plus additional edge-case tests). Bugs found and fixed during testing include a correlation false-positive (the network was blamed as root cause for unrelated incidents; fixed by requiring a direct report and time proximity) and duplicate suggestions of the same historical fix (deduplicated).</p>
+
+<!-- ====================================================================== -->
+<h1>14. Innovation Beyond the MVP</h1>
+<ul>
+<li><b>AI-assisted incident classification</b> – hybrid keyword + Naive Bayes model, retrained continuously.</li>
+<li><b>AI-based resolution recommendation</b> and <b>incident similarity detection</b> (TF-IDF with domain synonyms).</li>
+<li><b>Automated root-cause analysis</b> over a configurable <b>service dependency graph</b>.</li>
+<li><b>Predictive SLA violation detection</b> using live and historical data.</li>
+<li><b>Real-time notifications</b> and <b>real-time operational dashboard</b> via Server-Sent Events (toasts, live refresh).</li>
+<li><b>Automated incident escalation</b> through four levels with multi-channel alerts.</li>
+<li><b>Cloud database</b> (MongoDB Atlas) and real third-party integration (<b>Gmail SMTP</b>).</li>
+<li><b>Event-driven architecture</b> internally (domain events + observers) ready to move to a broker.</li>
+<li><b>Analytics and visualisation</b>: trends, priority mix, service health, technician performance, CSV export.</li>
+<li>Explainability everywhere: priority rationale, assignment reasons, duplicate scores, risk reasons.</li>
+</ul>
+
+<!-- ====================================================================== -->
+<h1>15. User Interface</h1>
+<p>Three visually distinct portals (different colour identity, navigation and home page) as required ("difference in GUI for different users"):</p>
+<table>
+<tr><th>Portal</th><th>Users</th><th>Screens</th></tr>
+<tr><td>Employee portal (blue)</td><td>Employee</td><td>Home with "needs your action" alerts; Report incident with live AI analysis (category, expected priority, possible duplicates, known fixes); My incidents (search); incident detail with lifecycle bar, notes, provide information, confirm &amp; rate, reopen.</td></tr>
+<tr><td>Support workspace (teal)</td><td>Technician, Team Lead</td><td>Dashboard with workload KPIs and SLA risk; My workload with availability toggle; queue; incident detail with acknowledge/start/request info/resolve, investigation notes, suggested resolutions, correlations; team lead: assign with smart recommendations, SLA centre, reports.</td></tr>
+<tr><td>IT management console (purple)</td><td>Administrator, IT Manager</td><td>Operations dashboard (KPIs, 14-day trend, priority mix, technician workload, service health, urgent incidents); incident monitor with 12 filters and CSV export; SLA &amp; correlation centre; reports; users &amp; technicians; IT services &amp; dependencies; categories; SLA policies; strategies &amp; system status; notification log; audit log.</td></tr>
+</table>
+<p>[Insert screenshots of each portal here.]</p>
+
+<!-- ====================================================================== -->
+<h1>16. Demonstration Workflows</h1>
+<p><b>Workflow 1 – Employee reports → system prioritises → technician assigned → notification generated.</b> Employee reports "Checkout page not loading for customers" on the Payment Gateway (I=4, U=4, 500 users). Live analysis suggests APPLICATION and P1 and warns about INC1037. On submit: classified, P1, Payments P1 SLA (5/20 min), smart strategy assigns a skilled technician, in-app toast + Gmail e-mail + simulated SMS.</p>
+<p><b>Workflow 2 – Technician investigates → SLA monitored → resolved → user notified.</b> Technician acknowledges (response time recorded), starts, adds an investigation note, requests information (SLA paused), employee answers, technician applies a suggested resolution and resolves; employee is notified, confirms and rates; incident closed; full audit trail shown.</p>
+<p><b>Workflow 3 – Multiple incidents → duplicates/related → correlated/escalated.</b> Several payment reports are linked as duplicates; correlation shows ERP/HR/DB incidents sharing the Core Database Cluster as probable root cause; an unacknowledged P1 breaches its response SLA and escalates Technician → Team Lead → Admin → IT Manager (visible in notifications and SLA centre).</p>
+<p>The detailed recording script is in <code>docs/DEMO_VIDEO_SCRIPT.md</code>.</p>
+
+<!-- ====================================================================== -->
+<h1>17. Team Responsibilities</h1>
+<table>
+<tr><th>Member</th><th>Responsibilities</th><th>Main files</th></tr>
+<tr><td>[Member 1]</td><td>Domain model, OOP design, State/Factory patterns, UML</td><td>backend/src/domain/*</td></tr>
+<tr><td>[Member 2]</td><td>REST API, authentication, RBAC, validation, error handling</td><td>backend/src/api/*, services/AuthService.ts, IncidentAccessPolicy.ts</td></tr>
+<tr><td>[Member 3]</td><td>MongoDB Atlas, repositories, schema, seed data, ER diagram</td><td>backend/src/persistence/*, seed/*</td></tr>
+<tr><td>[Member 4]</td><td>React UI/UX, dashboards, real-time notifications</td><td>frontend/src/*</td></tr>
+<tr><td>[Member 5]</td><td>Strategies, intelligent features, SLA monitor, tests</td><td>backend/src/strategies/*, intelligence/*, sla/*, tests/*</td></tr>
+</table>
+<p>Every member is able to explain the overall flow (Section 3) and the patterns (Section 6).</p>
+
+<h1>18. Limitations and Future Work</h1>
+<ul>
+<li>SLA calendars are 24×7; business-hours calendars and holidays per service are future work.</li>
+<li>The classifier is lightweight NLP; an LLM or sentence-embedding model could improve semantic similarity (the <code>CategoryClassifier</code>/<code>DuplicateDetector</code> classes can be replaced behind the same interface).</li>
+<li>File attachments (screenshots), a knowledge-base module, chatbot/voice reporting and mobile push notifications.</li>
+<li>Horizontal scaling (Section 9.2 Q9), refresh tokens, MFA and SSO login.</li>
+</ul>
+
+<h1>Appendix A – REST API</h1>
+<table>
+<tr><th>Method &amp; path</th><th>Role</th><th>Purpose</th></tr>
+<tr><td>POST /api/auth/register, /login; GET /auth/me; POST /auth/change-password</td><td>any</td><td>Authentication</td></tr>
+<tr><td>GET /api/services, /categories, /sla-policies, /lifecycle</td><td>logged in</td><td>Reference data</td></tr>
+<tr><td>POST /api/incidents/analyze</td><td>logged in</td><td>Live AI analysis of a draft</td></tr>
+<tr><td>POST /api/incidents; GET /api/incidents?filters; GET /incidents/:id; PATCH /incidents/:id</td><td>scoped</td><td>Create, search, view, update</td></tr>
+<tr><td>POST /incidents/:id/classify | assign | acknowledge | start | notes | request-info | provide-info | resolve | verify | reopen | close | feedback | duplicate-of</td><td>per policy</td><td>Lifecycle actions</td></tr>
+<tr><td>GET /incidents/:id/audit | related | recommendations</td><td>scoped</td><td>History, intelligence, technician ranking</td></tr>
+<tr><td>GET /incidents/export.csv</td><td>REPORT_VIEW</td><td>CSV export</td></tr>
+<tr><td>GET /technicians; GET /technicians/me/workload; PUT /technicians/me/availability</td><td>staff</td><td>Workload</td></tr>
+<tr><td>GET /notifications; POST /notifications/:id/read, /read-all; GET /notifications/stream (SSE)</td><td>logged in</td><td>Notifications</td></tr>
+<tr><td>GET /reports/overview | technicians | services | trend | sla-violations | sla-risk | correlations</td><td>REPORT_VIEW</td><td>Reports &amp; analytics</td></tr>
+<tr><td>/api/admin/users, services, categories, sla-policies, settings, audit, notifications, sla-monitor/run, system</td><td>Admin</td><td>Administration</td></tr>
+</table>
+
+<h1>Appendix B – How to run</h1>
+<pre class="code">cd backend &amp;&amp; npm install &amp;&amp; copy .env.example .env   (set MONGODB_URI, JWT_SECRET, SMTP_* )
+npm run dev            # API  http://localhost:4000/api  (auto-seeds an empty database)
+cd ../frontend &amp;&amp; npm install &amp;&amp; npm run dev   # UI http://localhost:5173
+npm test --prefix backend
+Demo password for all accounts: Password@123  (employee@, technician@, teamlead@, admin@, manager@itsm.demo)</pre>
+
+<h1>Appendix C – Rubric coverage</h1>
+<table>
+<tr><th>Rubric criterion</th><th>Evidence</th></tr>
+<tr><td>System design &amp; architecture (10)</td><td>Sections 1–4: problem analysis, layered architecture, 9 UML/ER diagrams</td></tr>
+<tr><td>Functionality – MVP (60)</td><td>User mgmt (3+2 roles), incident CRUD + lifecycle, priority (impact/urgency/criticality), 4 assignment strategies, SLA calc/deadlines/violations, 3 notification mechanisms, complete audit, 12 search criteria + reports, 7 intelligent features, MongoDB persistence</td></tr>
+<tr><td>User experience (10)</td><td>3 distinct portals, live analysis, real-time toasts, SLA visualisation, security, runtime configuration</td></tr>
+<tr><td>Technical depth (15)</td><td>TypeScript OOP, 9 patterns, Gmail API integration, MongoDB Atlas, SSE, background jobs, scalability plan</td></tr>
+<tr><td>Testing &amp; validation (5)</td><td>27 documented cases; unit + API integration + DB tests; exception and edge cases</td></tr>
+<tr><td>Innovation (10)</td><td>Section 14 – 10 items from the Innovation Challenge list</td></tr>
+<tr><td>Documentation &amp; presentation (10)</td><td>This report, README, test document, demo script</td></tr>
+</table>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose', flowchart: { useMaxWidth: true }, class: { useMaxWidth: true }, er: { useMaxWidth: true } });
+</script>
+</body>
+</html>
