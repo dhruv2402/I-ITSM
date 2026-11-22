@@ -23,5 +23,7 @@ services:
         value: smtp.gmail.com
       - key: SMTP_PORT
         value: "465"
-# Optional, added later in the service's Environment tab for real e-mails:
-#   SMTP_USER, SMTP_PASS (Gmail app password), EMAIL_FROM, EMAIL_OVERRIDE_RECIPIENT
+# Optional, added later in the service's Environment tab for real e-mails.
+# Render's free plan blocks outgoing SMTP ports, so use the HTTPS e-mail API there:
+#   BREVO_API_KEY, EMAIL_FROM (a sender verified in Brevo), EMAIL_OVERRIDE_RECIPIENT
+# Gmail SMTP (SMTP_USER, SMTP_PASS = app password) works when running locally.

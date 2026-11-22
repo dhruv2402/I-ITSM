@@ -75,7 +75,7 @@ The repository contains a Render Blueprint (`render.yaml`). One free web service
 
 1. render.com → **New → Blueprint** → select this repository.
 2. Paste the Atlas connection string when asked for `MONGODB_URI` (`JWT_SECRET` is generated automatically).
-3. Optional real e-mail: add `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`, `EMAIL_OVERRIDE_RECIPIENT` in the service's **Environment** tab.
+3. Optional real e-mail: Render's free plan blocks outgoing SMTP, so add `BREVO_API_KEY`, `EMAIL_FROM` (a sender verified in Brevo) and `EMAIL_OVERRIDE_RECIPIENT` in the service's **Environment** tab (HTTPS e-mail API adapter). Gmail SMTP (`SMTP_USER`, `SMTP_PASS`) works for local runs. E-mail is always sent in the background, so a slow provider never delays users.
 
 The free plan sleeps after ~15 minutes without traffic; the first request then takes ~30-60 s.
 

@@ -1,7 +1,7 @@
 import { createApp } from './app';
 import { env } from './config/env';
 import { buildContainer } from './container';
-import { ConsoleEmailAdapter, EmailGateway, GmailSmtpAdapter } from './notification/adapters/EmailGateway';
+import { BrevoApiAdapter, ConsoleEmailAdapter, EmailGateway, GmailSmtpAdapter } from './notification/adapters/EmailGateway';
 import { createInMemoryRepositories } from './persistence/memory/InMemoryRepositories';
 import { connectMongo } from './persistence/mongo/connection';
 import { createMongoRepositories } from './persistence/mongo/MongoRepositories';
@@ -19,7 +19,10 @@ async function main(): Promise<void> {
   }
 
   let email: EmailGateway = new ConsoleEmailAdapter();
-  if (env.smtp.user && env.smtp.pass) {
+  if (env.brevoApiKey && env.smtp.from) {
+    email = new BrevoApiAdapter(env.brevoApiKey, env.smtp.from, env.emailOverrideRecipient);
+    console.log(`[email] real e-mail enabled via ${email.provider}${env.emailOverrideRecipient ? ' (redirected to override recipient)' : ''}`);
+  } else if (env.smtp.user && env.smtp.pass) {
     email = new GmailSmtpAdapter(env.smtp, env.emailOverrideRecipient);
     console.log(`[email] real e-mail enabled via ${email.provider}${env.emailOverrideRecipient ? ' (redirected to override recipient)' : ''}`);
   } else {

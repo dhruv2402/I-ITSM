@@ -3,7 +3,7 @@
 Automated with **Jest + ts-jest**, **Supertest** (REST API) and **mongodb-memory-server** (real MongoDB).
 Run: `cd backend && npm test` (coverage: `npm run test:coverage`).
 
-**Latest result (21 Nov 2026): Test Suites 7 passed · Tests 45 passed, 45 total.**
+**Latest result (22 Nov 2026): Test Suites 8 passed · Tests 47 passed, 47 total.**
 
 | Suite | File | Tests |
 |---|---|---|
@@ -51,6 +51,8 @@ Demo data used by the tests is the automatic seed (`backend/src/seed/seedData.ts
 | TC28 | Authentication | Missing / forged token | — | GET /incidents without token, with forged token | 401 | api › requests without a token | Pass |
 | TC29 | Security | Registration rules | — | Weak password; valid; duplicate e-mail | 400; 201 role EMPLOYEE, no passwordHash in response; 409 | api › registration… | Pass |
 | TC30 | Business rule | Escalation stops when acknowledged | P1 on SVC-DB acknowledged | Clock +12 min, run monitor | escalationLevel 0 | slaMonitor › acknowledged… | Pass |
+| TC31 | Non-functional | Slow e-mail provider never blocks the user | E-mail gateway taking 1.5 s | Create incident; then wait for background deliveries | Request returns in < 1 s; in-app notification immediate; e-mail logged as SENT later | notifications › slow e-mail provider | Pass |
+| TC32 | Exception | E-mail provider failure | Gateway throws "connection timeout" | Create incident | Incident created; e-mail delivery logged as FAILED with the error | notifications › failing e-mail provider | Pass |
 
 ## Manual UI test checklist (performed in the browser)
 

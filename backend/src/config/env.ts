@@ -18,6 +18,8 @@ export const env = {
     from: process.env.EMAIL_FROM ?? process.env.SMTP_USER ?? '',
   },
   emailOverrideRecipient: process.env.EMAIL_OVERRIDE_RECIPIENT ?? '',
+  /** HTTPS e-mail API key (Brevo). Preferred over SMTP when set; needed on hosts that block SMTP. */
+  brevoApiKey: process.env.BREVO_API_KEY ?? '',
   slaMonitorIntervalMs: Number(process.env.SLA_MONITOR_INTERVAL_MS ?? 30000),
 };
 
