@@ -59,7 +59,7 @@
   </table>
   <p style="text-align:center">Source code: <a class="mono" href="https://github.com/dhruv2402/I-ITSM">https://github.com/dhruv2402/I-ITSM</a></p>
   <p style="text-align:center">Live demo: <a class="mono" href="https://i-itsm-jy6e.onrender.com">https://i-itsm-jy6e.onrender.com</a> (Render + MongoDB Atlas; demo password <span class="mono">Password@123</span>)</p>
-  <p style="text-align:center">Stack: React + TypeScript · Node.js + Express + TypeScript · MongoDB Atlas · Gmail SMTP · Server-Sent Events · Jest</p>
+  <p style="text-align:center">Stack: React + TypeScript · Node.js + Express + TypeScript · MongoDB Atlas · Render · Brevo e-mail API / Gmail SMTP · Server-Sent Events · Jest</p>
 </section>
 
 <h1>Contents</h1>
@@ -119,7 +119,7 @@
 <li>Impact, urgency and business criticality use a 1–4 ordinal scale; business criticality belongs to the IT service, not to the reporter.</li>
 <li>SLA clocks run in calendar time (24×7); the resolution clock pauses while the technician waits for information from the reporter.</li>
 <li>Escalation applies to P1/P2 incidents not acknowledged within the response target; each further response window raises one level.</li>
-<li>E-mail is sent through Gmail SMTP; SMS is simulated (adapter ready for a real provider). Demo accounts use fictitious addresses, so e-mails can be redirected to one inbox.</li>
+<li>E-mail is sent through the Brevo transactional e-mail API on the cloud deployment (Render's free plan blocks outgoing SMTP) and through Gmail SMTP when run locally; SMS is simulated (adapter ready for a real provider). Demo accounts use fictitious addresses, so e-mails are redirected to one inbox.</li>
 <li>Self-registration creates Employees only; staff accounts are created by administrators.</li>
 </ul>
 
@@ -153,7 +153,7 @@
 <tr><td>Extensibility</td><td>New category / SLA policy / service = data, no code. New assignment or priority algorithm, notification channel, e-mail provider or database = one new class implementing an interface.</td></tr>
 <tr><td>Security</td><td>bcrypt password hashing, JWT (HS256, 8 h), role + ownership authorisation, input validation (zod), helmet headers, CORS, login rate-limit, CSV-injection guard.</td></tr>
 <tr><td>Performance</td><td>Indexed MongoDB queries for search; API responses &lt; 300 ms for typical data volumes; background SLA monitor runs every 30 s without blocking requests.</td></tr>
-<tr><td>Reliability</td><td>A failing observer (e.g. e-mail outage) never breaks the business operation; DB errors mapped to <code>DatabaseError</code>; graceful degradation for missing SLA configuration.</td></tr>
+<tr><td>Reliability</td><td>A failing observer (e.g. e-mail outage) never breaks the business operation; e-mail and SMS are delivered in the background with 10–20 s timeouts, so a slow or blocked provider never delays the user; DB errors mapped to <code>DatabaseError</code>; graceful degradation for missing SLA configuration.</td></tr>
 <tr><td>Usability</td><td>Separate, colour-coded portals per user type; live analysis while typing; real-time toasts; responsive layout.</td></tr>
 <tr><td>Testability</td><td>In-memory repositories and a controllable clock allow deterministic unit/integration tests.</td></tr>
 <tr><td>Auditability</td><td>Every state change and configuration change is recorded and immutable.</td></tr>
@@ -199,7 +199,7 @@ flowchart TB
   REPO["Repository interfaces<br/>MongoDB / in-memory"]
   BUS["EventBus<br/>(Observer)"]
   DB[("MongoDB Atlas")]
-  OBS["Observers: audit · notifications · realtime<br/>Adapters: Gmail SMTP · SMS (simulated)"]
+  OBS["Observers: audit · notifications · realtime<br/>Adapters: Brevo API / Gmail SMTP · SMS (simulated)"]
   UI -- "REST / JSON + JWT" --> API
   API --> SVC
   SVC --> ALG
@@ -215,7 +215,7 @@ flowchart TB
 <div class="cap">Figure 3.1 – Layered architecture and component interactions</div>
 </div>
 <h3>Request flow (example: report incident)</h3>
-<p>The React form calls <code>POST /api/incidents</code>. The router validates the body with zod, the auth middleware resolves the JWT to a <code>User</code> object, and <code>IncidentService.create</code> orchestrates: create <code>Incident</code> → classify → calculate priority (strategy) → attach SLA → detect duplicates → choose technician (strategy) → save (repository) → publish domain events. Observers then write the audit trail, send notifications (in-app via SSE, e-mail via Gmail adapter, SMS for critical events) and push a live refresh to all dashboards.</p>
+<p>The React form calls <code>POST /api/incidents</code>. The router validates the body with zod, the auth middleware resolves the JWT to a <code>User</code> object, and <code>IncidentService.create</code> orchestrates: create <code>Incident</code> → classify → calculate priority (strategy) → attach SLA → detect duplicates → choose technician (strategy) → save (repository) → publish domain events. Observers then write the audit trail, send notifications (in-app via SSE immediately; e-mail via the Brevo/Gmail adapter and SMS for critical events in the background) and push a live refresh to all dashboards.</p>
 </div>
 
 <!-- ====================================================================== -->
@@ -558,6 +558,7 @@ classDiagram
     &lt;&lt;interface&gt;&gt;
     +send(message) void
   }
+  class BrevoApiAdapter
   class GmailSmtpAdapter
   class ConsoleEmailAdapter
   class SmsGateway {
@@ -572,12 +573,13 @@ classDiagram
   NotificationChannel &lt;|.. EmailChannel
   NotificationChannel &lt;|.. SmsChannel
   EmailChannel --> EmailGateway
+  EmailGateway &lt;|.. BrevoApiAdapter
   EmailGateway &lt;|.. GmailSmtpAdapter
   EmailGateway &lt;|.. ConsoleEmailAdapter
   SmsChannel --> SmsGateway
   SmsGateway &lt;|.. SimulatedSmsGateway
 </pre>
-<div class="cap">Figure 4.5b – Factory + Adapter: a new mechanism (e.g. Microsoft Teams) = one class implementing <code>NotificationChannel</code> + one line in the factory; GmailSmtpAdapter wraps nodemailer. Default policy: PriorityBasedChannelPolicy.</div>
+<div class="cap">Figure 4.5b – Factory + Adapter: a new mechanism (e.g. Microsoft Teams) = one class implementing <code>NotificationChannel</code> + one line in the factory. Three interchangeable e-mail adapters: BrevoApiAdapter (HTTPS API, used on Render), GmailSmtpAdapter (wraps nodemailer, used locally) and ConsoleEmailAdapter (simulation). E-mail and SMS are delivered in the background. Default policy: PriorityBasedChannelPolicy.</div>
 </div>
 </div>
 
@@ -799,9 +801,9 @@ sequenceDiagram
 <tr><td><b>Observer</b></td><td>EventBus, EventSubscriber, AuditTrailSubscriber, NotificationSubscriber, RealtimeSubscriber</td><td>Audit, notifications and live dashboards react to incident events without the incident workflow knowing about them; new reactions (e.g. Slack webhook) need no change in IncidentService.</td></tr>
 <tr><td><b>Factory</b></td><td>UserFactory, NotificationFactory, <code>Incident.create</code> / <code>SlaTracker.start</code> (static factory methods)</td><td>Centralises which subclass represents a role (also used when an admin changes a role); builds channel objects and event-specific messages.</td></tr>
 <tr><td><b>Repository</b></td><td>Repository&lt;T&gt; + MongoDB and in-memory implementations</td><td>Business code is independent of MongoDB; tests run without a database; storage technology can change.</td></tr>
-<tr><td><b>Adapter</b></td><td>GmailSmtpAdapter (nodemailer), ConsoleEmailAdapter, SimulatedSmsGateway</td><td>Third-party APIs adapted to our <code>EmailGateway</code>/<code>SmsGateway</code> interfaces; switching provider = new adapter.</td></tr>
+<tr><td><b>Adapter</b></td><td>BrevoApiAdapter (Brevo HTTPS API), GmailSmtpAdapter (nodemailer), ConsoleEmailAdapter, SimulatedSmsGateway</td><td>Third-party APIs adapted to our <code>EmailGateway</code>/<code>SmsGateway</code> interfaces; switching provider = new adapter. This paid off in practice: when Render's free plan blocked SMTP, adding <code>BrevoApiAdapter</code> was one new class and one line in the composition root, with no change to the notification logic.</td></tr>
 <tr><td><b>Specification</b></td><td>IncidentSpecification</td><td>Search criteria encapsulated as an object reused by both repositories (single definition of filtering, incl. time-dependent SLA status).</td></tr>
-<tr><td><b>Dependency Injection / Composition Root</b></td><td>container.ts</td><td>All objects are wired in one place; enables swapping MongoDB ↔ memory and Gmail ↔ console for tests.</td></tr>
+<tr><td><b>Dependency Injection / Composition Root</b></td><td>container.ts</td><td>All objects are wired in one place; enables swapping MongoDB ↔ memory and Brevo / Gmail ↔ console e-mail by configuration.</td></tr>
 <tr><td>Flyweight / Singleton-like registry</td><td>IncidentStates</td><td>State objects are stateless and shared by all incidents.</td></tr>
 </table>
 <pre class="code">// State pattern - an illegal action is rejected by the current state object
@@ -889,7 +891,8 @@ Rule overrides: Impact 4 on criticality-4 service ⇒ P1;  ≥500 users ⇒ at l
 <tr><td>Web framework</td><td>Express 4</td><td>REST API routing and middleware</td></tr>
 <tr><td>Database</td><td>MongoDB Atlas (cloud) + Mongoose 8</td><td>Persistence, indexes, aggregation</td></tr>
 <tr><td>Auth / security</td><td>jsonwebtoken, bcryptjs, helmet, cors, express-rate-limit, zod</td><td>JWT, password hashing, headers, CORS, brute-force protection, validation</td></tr>
-<tr><td>Integration</td><td>nodemailer + Gmail SMTP</td><td>Real e-mail notifications (adapter)</td></tr>
+<tr><td>Integration</td><td>Brevo transactional e-mail API (HTTPS); nodemailer + Gmail SMTP</td><td>Real e-mail notifications through interchangeable adapters (Brevo on Render, Gmail locally)</td></tr>
+<tr><td>Hosting</td><td>Render (free web service, <code>render.yaml</code> Blueprint)</td><td>Cloud deployment with HTTPS, health checks and auto-deploy from GitHub</td></tr>
 <tr><td>Real time</td><td>Server-Sent Events</td><td>Live notifications and dashboard refresh</td></tr>
 <tr><td>Frontend</td><td>React 18, React Router 6, Vite 6, Recharts</td><td>SPA, routing, build tooling, charts</td></tr>
 <tr><td>Testing</td><td>Jest, ts-jest, Supertest, mongodb-memory-server</td><td>Unit, API integration and database tests</td></tr>
@@ -916,7 +919,7 @@ Rule overrides: Impact 4 on criticality-4 service ⇒ P1;  ≥500 users ⇒ at l
 <tr><td>Input validation</td><td>zod schemas whitelist and type-check every body/query (lengths, enums, ranges); domain constructors re-validate invariants; JSON body limit 100 kB.</td></tr>
 <tr><td>Secure API access</td><td>helmet security headers, CORS restricted to the frontend origin, rate limiting on login/registration (20 per 15 min), generic login error (no account enumeration), 401/403 distinction.</td></tr>
 <tr><td>Unauthorized operations</td><td>Self-registration only creates employees; admins cannot deactivate or demote themselves; illegal lifecycle moves rejected; CSV export guards against spreadsheet formula injection; MongoDB queries built from validated values only (no operator injection).</td></tr>
-<tr><td>Secrets</td><td>Database URI, JWT secret and Gmail app password only in <code>.env</code> (git-ignored); <code>.env.example</code> documents them.</td></tr>
+<tr><td>Secrets</td><td>Database URI, JWT secret, Brevo API key and Gmail app password only in <code>.env</code> (git-ignored) locally and in Render's environment settings in the cloud; never in the repository. <code>.env.example</code> documents them. The Brevo key is restricted to sending e-mail and to authorised IP addresses.</td></tr>
 <tr><td>Not implemented (documented)</td><td>HTTPS termination (provided by hosting), refresh tokens / token revocation list, MFA, account lockout policy, audit-log tamper evidence (hash chaining).</td></tr>
 </table>
 
@@ -935,7 +938,7 @@ Rule overrides: Impact 4 on criticality-4 service ⇒ P1;  ≥500 users ⇒ at l
 <tr><td>Missing SLA configuration</td><td>SlaConfigurationError</td><td>422</td><td>Caught in IncidentService: incident still created, SLA_MISSING event alerts admins</td></tr>
 <tr><td>Duplicate incident</td><td>DuplicateIncidentError</td><td>409</td><td>UI offers "different problem — submit anyway"</td></tr>
 <tr><td>Database failure</td><td>DatabaseError</td><td>503</td><td>All Mongo calls wrapped by <code>guard()</code></td></tr>
-<tr><td>Network failure</td><td>ExternalServiceError (server) / NETWORK_FAILURE (client)</td><td>502</td><td>E-mail failures logged as FAILED deliveries without breaking the operation; client shows "cannot reach server"</td></tr>
+<tr><td>Network failure</td><td>ExternalServiceError (server) / NETWORK_FAILURE (client)</td><td>502</td><td>E-mail is sent in the background with timeouts; failures are logged as FAILED deliveries with the error, never blocking or breaking the operation; client shows "cannot reach server"</td></tr>
 <tr><td>Invalid user input</td><td>ValidationError</td><td>400</td><td>Field-level details from zod</td></tr>
 </table>
 
@@ -1120,6 +1123,11 @@ erDiagram
 <tr><td>TC25</td><td>Boundary</td><td>Feedback rating 0, 6, and before resolution</td><td>Rejected; 5 accepted and auto-verifies</td></tr>
 <tr><td>TC26</td><td>Business rule</td><td>SLA pause in PENDING_INFO for 60 min</td><td>Resolution deadline moves by 60 min</td></tr>
 <tr><td>TC27</td><td>Exception</td><td>All SLA policies deleted, new incident</td><td>Incident created without SLA; SLA_MISSING audited</td></tr>
+<tr><td>TC28</td><td>Authentication</td><td>Missing / forged token</td><td>401</td></tr>
+<tr><td>TC29</td><td>Security</td><td>Weak password; duplicate e-mail on registration</td><td>400; 201 as EMPLOYEE without password hash; 409</td></tr>
+<tr><td>TC30</td><td>Business rule</td><td>Acknowledged P1, clock +12 min</td><td>No escalation</td></tr>
+<tr><td>TC31</td><td>Non-functional</td><td>E-mail provider takes 1.5 s</td><td>Incident created in &lt; 1 s; in-app notification immediate; e-mail logged as SENT later</td></tr>
+<tr><td>TC32</td><td>Exception</td><td>E-mail provider fails ("connection timeout")</td><td>Incident still created; e-mail delivery logged as FAILED with the error</td></tr>
 </table>
 <p><b>Results (22 Nov 2026):</b> <code>Test Suites: 8 passed, 8 total · Tests: 47 passed, 47 total</code> (unit, API integration and MongoDB repository suites; the documented cases above map to named tests, plus additional edge-case tests). Bugs found and fixed during testing include a correlation false-positive (the network was blamed as root cause for unrelated incidents; fixed by requiring a direct report and time proximity) and duplicate suggestions of the same historical fix (deduplicated).</p>
 
@@ -1132,7 +1140,7 @@ erDiagram
 <li><b>Predictive SLA violation detection</b> using live and historical data.</li>
 <li><b>Real-time notifications</b> and <b>real-time operational dashboard</b> via Server-Sent Events (toasts, live refresh).</li>
 <li><b>Automated incident escalation</b> through four levels with multi-channel alerts.</li>
-<li><b>Cloud deployment</b> on Render (infrastructure as code, HTTPS, health checks) with a <b>cloud database</b> (MongoDB Atlas), and real third-party integration (<b>Gmail SMTP</b>).</li>
+<li><b>Cloud deployment</b> on Render (infrastructure as code, HTTPS, health checks) with a <b>cloud database</b> (MongoDB Atlas), and real third-party integrations (<b>Brevo e-mail API</b> in the cloud, <b>Gmail SMTP</b> locally).</li>
 <li><b>Event-driven architecture</b> internally (domain events + observers) ready to move to a broker.</li>
 <li><b>Analytics and visualisation</b>: trends, priority mix, service health, technician performance, CSV export.</li>
 <li>Explainability everywhere: priority rationale, assignment reasons, duplicate scores, risk reasons.</li>
@@ -1158,7 +1166,7 @@ erDiagram
 
 <!-- ====================================================================== -->
 <h1>16. Demonstration Workflows</h1>
-<p><b>Workflow 1 – Employee reports → system prioritises → technician assigned → notification generated.</b> Employee reports "Checkout page not loading for customers" on the Payment Gateway (I=4, U=4, 500 users). Live analysis suggests APPLICATION and P1 and warns about INC1037. On submit: classified, P1, Payments P1 SLA (5/20 min), smart strategy assigns a skilled technician, in-app toast + Gmail e-mail + simulated SMS.</p>
+<p><b>Workflow 1 – Employee reports → system prioritises → technician assigned → notification generated.</b> Employee reports "Checkout page not loading for customers" on the Payment Gateway (I=4, U=4, 500 users). Live analysis suggests APPLICATION and P1 and warns about INC1037. On submit: classified, P1, Payments P1 SLA (5/20 min), smart strategy assigns a skilled technician, in-app toast + real e-mail (Brevo) + simulated SMS.</p>
 <p><b>Workflow 2 – Technician investigates → SLA monitored → resolved → user notified.</b> Technician acknowledges (response time recorded), starts, adds an investigation note, requests information (SLA paused), employee answers, technician applies a suggested resolution and resolves; employee is notified, confirms and rates; incident closed; full audit trail shown.</p>
 <p><b>Workflow 3 – Multiple incidents → duplicates/related → correlated/escalated.</b> Several payment reports are linked as duplicates; correlation shows ERP/HR/DB incidents sharing the Core Database Cluster as probable root cause; an unacknowledged P1 breaches its response SLA and escalates Technician → Team Lead → Admin → IT Manager (visible in notifications and SLA centre).</p>
 <p>The detailed recording script is in <code>docs/DEMO_VIDEO_SCRIPT.md</code>.</p>
@@ -1211,8 +1219,8 @@ Demo password for all accounts: Password@123  (employee@, technician@, teamlead@
 <tr><td>System design &amp; architecture (10)</td><td>Sections 1–4: problem analysis, layered architecture, 9 UML/ER diagrams</td></tr>
 <tr><td>Functionality – MVP (60)</td><td>User mgmt (3+2 roles), incident CRUD + lifecycle, priority (impact/urgency/criticality), 4 assignment strategies, SLA calc/deadlines/violations, 3 notification mechanisms, complete audit, 12 search criteria + reports, 7 intelligent features, MongoDB persistence</td></tr>
 <tr><td>User experience (10)</td><td>3 distinct portals, live analysis, real-time toasts, SLA visualisation, security, runtime configuration</td></tr>
-<tr><td>Technical depth (15)</td><td>TypeScript OOP, 9 patterns, Gmail API integration, MongoDB Atlas, SSE, background jobs, scalability plan</td></tr>
-<tr><td>Testing &amp; validation (5)</td><td>27 documented cases; unit + API integration + DB tests; exception and edge cases</td></tr>
+<tr><td>Technical depth (15)</td><td>TypeScript OOP, 9 patterns, Brevo e-mail API + Gmail SMTP integration, MongoDB Atlas, Render cloud deployment, SSE, background jobs, scalability plan</td></tr>
+<tr><td>Testing &amp; validation (5)</td><td>32 documented cases, 47 automated tests; unit + API integration + DB tests; exception, edge-case and non-blocking-notification tests</td></tr>
 <tr><td>Innovation (10)</td><td>Section 14 – 10 items from the Innovation Challenge list</td></tr>
 <tr><td>Documentation &amp; presentation (10)</td><td>This report, README, test document, demo script</td></tr>
 </table>
