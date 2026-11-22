@@ -31,18 +31,23 @@ export class EventBus {
     return this.subscribers.map((s) => s.name);
   }
 
+  /** Observers are independent of each other, so they handle an event concurrently. */
   async publish(event: DomainEvent): Promise<void> {
-    for (const s of this.subscribers) {
-      if (s.interestedIn && !s.interestedIn(event.type)) continue;
-      try {
-        await s.handle(event);
-      } catch (err) {
-        console.error(`[EventBus] subscriber ${s.name} failed on ${event.type}:`, (err as Error).message);
-      }
-    }
+    await Promise.all(
+      this.subscribers
+        .filter((s) => !s.interestedIn || s.interestedIn(event.type))
+        .map(async (s) => {
+          try {
+            await s.handle(event);
+          } catch (err) {
+            console.error(`[EventBus] subscriber ${s.name} failed on ${event.type}:`, (err as Error).message);
+          }
+        }),
+    );
   }
 
+  /** Events raised by one operation are processed concurrently (each carries its own timestamp). */
   async publishAll(events: DomainEvent[]): Promise<void> {
-    for (const e of events) await this.publish(e);
+    await Promise.all(events.map((e) => this.publish(e)));
   }
 }

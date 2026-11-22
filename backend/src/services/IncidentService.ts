@@ -1,3 +1,4 @@
+import { ItService } from '../domain/catalog/ItService';
 import { IncidentStatus, Level, NoteType, Permission, Role } from '../domain/enums';
 import {
   AuthorizationError,
@@ -98,9 +99,12 @@ export class IncidentService {
   }
 
   private async buildCandidates(inc: Incident): Promise<TechnicianCandidate[]> {
-    const techs = (await this.d.repos.users.findByRoles([Role.TECHNICIAN, Role.TEAM_LEAD])).filter(isTechnician);
-    const workload = await this.repo.activeWorkload();
-    const solved = await this.repo.findSolved(1000);
+    const [users, workload, solved] = await Promise.all([
+      this.d.repos.users.findByRoles([Role.TECHNICIAN, Role.TEAM_LEAD]),
+      this.repo.activeWorkload(),
+      this.repo.findSolved(1000),
+    ]);
+    const techs = users.filter(isTechnician);
     return techs.map((t) => ({
       technician: t,
       activeWorkload: workload.get(t.id) ?? 0,
@@ -124,8 +128,8 @@ export class IncidentService {
     }
   }
 
-  private async recalculatePriority(inc: Incident, actor: User | null): Promise<void> {
-    const service = await this.d.repos.services.findById(inc.serviceId);
+  private async recalculatePriority(inc: Incident, actor: User | null, knownService?: ItService | null): Promise<void> {
+    const service = knownService ?? (await this.d.repos.services.findById(inc.serviceId));
     const result = this.d.priority.calculate({
       impact: inc.impact,
       urgency: inc.urgency,
@@ -181,10 +185,14 @@ export class IncidentService {
 
   async create(user: User, input: CreateIncidentInput) {
     if (!user.hasPermission(Permission.INCIDENT_CREATE)) throw new AuthorizationError('You are not allowed to report incidents');
-    const service = await this.d.repos.services.findById(input.serviceId);
+    // independent reads in one parallel round trip
+    const [service, active, categories] = await Promise.all([
+      this.d.repos.services.findById(input.serviceId),
+      this.repo.findActive(),
+      this.d.repos.categories.findAll(),
+    ]);
     if (!service || !service.isActive) throw new ServiceNotFoundError(input.serviceId);
     const now = clock.now();
-    const active = await this.repo.findActive();
 
     // Business rule: the same person re-submitting the same problem within 30 minutes is rejected.
     if (!input.confirmNotDuplicate) {
@@ -210,7 +218,6 @@ export class IncidentService {
     });
 
     // 2. classify (reporter's choice, otherwise the AI suggestion, otherwise GENERAL)
-    const categories = await this.d.repos.categories.findAll();
     if (input.categoryCode) {
       const chosen = categories.find((c) => c.code === input.categoryCode!.toUpperCase() && c.isActive);
       if (!chosen) throw new ValidationError(`Unknown incident category ${input.categoryCode}`);
@@ -221,7 +228,7 @@ export class IncidentService {
     }
 
     // 3-6. business impact -> priority -> SLA
-    await this.recalculatePriority(inc, null);
+    await this.recalculatePriority(inc, null, service);
 
     // intelligent: duplicate detection against open incidents
     const duplicates = this.d.duplicates.findDuplicates(

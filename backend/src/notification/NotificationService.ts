@@ -32,6 +32,7 @@ export class NotificationService {
     const unique = [...new Map(recipients.map((r) => [r.id, r])).values()];
     const types = this.policy.channelsFor(event.type, event.incident?.priority ?? null);
     const out: NotificationRecord[] = [];
+    const inApp: Promise<void>[] = [];
     for (const r of unique) {
       const message = this.factory.createMessage(event, r);
       for (const t of types) {
@@ -51,9 +52,14 @@ export class NotificationService {
           createdAt: clock.now(),
         });
         if (t === ChannelType.IN_APP) {
-          const rec = record(await channel.deliver(message));
-          await this.repo.save(rec);
-          out.push(rec);
+          // all recipients' in-app notifications are stored in parallel
+          inApp.push(
+            channel.deliver(message).then(async (result) => {
+              const rec = record(result);
+              await this.repo.save(rec);
+              out.push(rec);
+            }),
+          );
           continue;
         }
         const job: Promise<void> = channel
@@ -65,6 +71,7 @@ export class NotificationService {
         this.inFlight.add(job);
       }
     }
+    await Promise.all(inApp);
     return out;
   }
 

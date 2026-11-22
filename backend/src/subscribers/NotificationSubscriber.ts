@@ -60,17 +60,15 @@ export class NotificationSubscriber implements EventSubscriber {
     }
     if (audience.length === 0) return;
 
-    const recipients: User[] = [];
-    const addById = async (id: string | null) => {
-      if (!id) return;
-      const u = await this.users.findById(id);
-      if (u) recipients.push(u);
-    };
-    if (audience.includes('reporter')) await addById(inc.reporterId);
-    if (audience.includes('assignee')) await addById(inc.assignedTechnicianId);
-    if (audience.includes('teamLeads')) recipients.push(...(await this.users.findByRoles([Role.TEAM_LEAD])));
-    if (audience.includes('admins')) recipients.push(...(await this.users.findByRoles([Role.ADMIN])));
-    if (audience.includes('managers')) recipients.push(...(await this.users.findByRoles([Role.MANAGER])));
+    // look up all recipient groups in parallel (one database round trip instead of several)
+    const byId = (id: string | null): Promise<User[]> => (id ? this.users.findById(id).then((u) => (u ? [u] : [])) : Promise.resolve([]));
+    const lookups: Promise<User[]>[] = [];
+    if (audience.includes('reporter')) lookups.push(byId(inc.reporterId));
+    if (audience.includes('assignee')) lookups.push(byId(inc.assignedTechnicianId));
+    if (audience.includes('teamLeads')) lookups.push(this.users.findByRoles([Role.TEAM_LEAD]));
+    if (audience.includes('admins')) lookups.push(this.users.findByRoles([Role.ADMIN]));
+    if (audience.includes('managers')) lookups.push(this.users.findByRoles([Role.MANAGER]));
+    const recipients: User[] = (await Promise.all(lookups)).flat();
 
     // never notify people about their own action (except the creation receipt), and skip deactivated accounts
     const targets: Recipient[] = recipients
