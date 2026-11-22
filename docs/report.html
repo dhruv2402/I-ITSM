@@ -6,6 +6,14 @@
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
 <style>
   @page { size: A4; margin: 16mm 14mm 18mm 14mm; }
+  /* wide diagrams get their own landscape pages so their text stays readable */
+  @page landscape { size: A4 landscape; margin: 12mm 14mm 12mm 14mm; }
+  .landscape { page: landscape; }
+  /* never leave a heading alone at the bottom of a page */
+  h2, h3 { break-after: avoid; page-break-after: avoid; }
+  /* keep every diagram on one page */
+  .figure pre.mermaid svg { max-height: 236mm; }
+  .landscape .figure pre.mermaid svg { max-height: 160mm; }
   :root { --ink:#0f172a; --muted:#475569; --accent:#4338ca; --line:#cbd5e1; }
   body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; color: var(--ink); font-size: 10.5pt; line-height: 1.45; margin: 0; background: #fff; }
   h1 { font-size: 20pt; color: var(--accent); margin: 0 0 8px; page-break-before: always; border-bottom: 2px solid var(--accent); padding-bottom: 4px; }
@@ -175,39 +183,34 @@
 <!-- ====================================================================== -->
 <h1>3. System Architecture</h1>
 <p>We chose a <b>layered architecture</b> (the first option in the brief) deployed as a single Node.js process that serves both the REST API and the built React app, with MongoDB Atlas as a managed cloud database. Dependencies point inwards: controllers → application services → domain; infrastructure (MongoDB, SMTP, SSE) implements interfaces owned by the inner layers.</p>
-<div class="figure">
+<div class="figure landscape">
 <pre class="mermaid">
 flowchart TB
-  subgraph Client["Browser - React SPA (TypeScript, Vite)"]
-    EP["Employee portal"]
-    TW["Support workspace (Technician / Team Lead)"]
-    AC["IT management console (Admin / Manager)"]
-  end
-  Client -- "REST/JSON + JWT" --> API
-  Client -. "Server-Sent Events (live notifications)" .- RT
-  subgraph Server["Node.js + Express (TypeScript)"]
-    API["API layer: router, zod validation, auth + RBAC middleware, error handler"]
-    SVC["Application services: IncidentService, AuthService, UserService, CatalogService, SettingsService, ReportService, IncidentAccessPolicy"]
-    DOM["Domain model: User hierarchy, Incident aggregate, IncidentState, SlaTracker, SlaPolicy, ItService, Category, DomainEvent"]
-    STR["Strategies: priority + assignment"]
-    INT["Intelligence: classifier, duplicates, correlation, recommender, SLA risk"]
-    BUS["EventBus (Observer)"]
-    OBS["Observers: AuditTrail, Notifications, RealtimeDashboard"]
-    MON["SlaMonitor + EscalationService (background job)"]
-    REPO["Repository interfaces"]
-    RT["RealtimeHub (SSE)"]
-    API --> SVC --> DOM
-    SVC --> STR
-    SVC --> INT
-    SVC --> REPO
-    SVC --> BUS --> OBS
-    MON --> REPO
-    MON --> BUS
-    OBS --> RT
-  end
-  REPO --> MONGO[("MongoDB Atlas")]
-  OBS -- "Adapter: nodemailer" --> GMAIL["Gmail SMTP"]
-  OBS -- "Adapter" --> SMS["SMS gateway (simulated)"]
+  UI["React SPA - TypeScript<br/>Employee · Support · Admin portals"]
+  MON["SlaMonitor + EscalationService<br/>background job, every 30 s"]
+  API["API layer<br/>Express router · zod validation<br/>JWT auth + RBAC · error handler"]
+  SVC["Application services<br/>Incident · Auth · User · Catalog<br/>Settings · Report · AccessPolicy"]
+  ALG["Strategies + intelligence<br/>priority · assignment · classifier<br/>duplicates · correlation · SLA risk"]
+  DOM["Domain model<br/>User hierarchy · Incident<br/>IncidentState · SlaTracker"]
+  REPO["Repository interfaces<br/>MongoDB / in-memory"]
+  BUS["EventBus<br/>(Observer)"]
+  DB[("MongoDB Atlas")]
+  OBS["Observers<br/>AuditTrail · Notifications<br/>RealtimeDashboard"]
+  MAIL["Gmail SMTP<br/>(Adapter)"]
+  SMS["SMS gateway<br/>(Adapter, simulated)"]
+  UI -- "REST / JSON + JWT" --> API
+  API --> SVC
+  SVC --> ALG
+  SVC --> DOM
+  SVC --> REPO
+  SVC --> BUS
+  MON --> REPO
+  MON --> BUS
+  REPO --> DB
+  BUS --> OBS
+  OBS --> MAIL
+  OBS --> SMS
+  OBS -. "Server-Sent Events" .-> UI
 </pre>
 <div class="cap">Figure 3.1 – Layered architecture and component interactions</div>
 </div>
@@ -222,41 +225,45 @@ flowchart TB
 flowchart LR
   E(("👤 Employee"))
   T(("👤 Technician"))
-  L(("👤 Team Lead"))
-  A(("👤 Administrator"))
-  M(("👤 IT Manager"))
-  S(("⏱ SLA Monitor (system)"))
-  subgraph SYS["I-ITSM"]
-    U1(["Register / Login"])
+  subgraph SYS1["I-ITSM – reporting and resolving"]
+    U1(["Register / login"])
     U2(["Report incident"])
-    U3(["Track status / view resolution"])
-    U4(["Add info / respond to request"])
-    U5(["Verify & give feedback / reopen"])
-    U6(["View assigned queue & workload"])
-    U7(["Acknowledge & investigate"])
-    U8(["Add notes / request info"])
-    U9(["Resolve / close incident"])
-    U10(["Assign / reassign (recommendations)"])
-    U11(["Monitor incidents & SLA"])
-    U12(["Manage users & technicians"])
-    U13(["Configure services, categories, SLA, strategies"])
-    U14(["View reports & audit log"])
-    U15(["Detect duplicates & correlate"])
-    U16(["Send notifications"])
-    U17(["Escalate incident"])
+    U3(["Track status /<br/>view resolution"])
+    U4(["Add info /<br/>respond to request"])
+    U5(["Verify, rate<br/>or reopen"])
+    U6(["View queue<br/>&amp; workload"])
+    U7(["Acknowledge<br/>&amp; investigate"])
+    U8(["Notes /<br/>request info"])
+    U9(["Resolve /<br/>close"])
   end
-  E --- U1 & U2 & U3 & U4 & U5
-  T --- U1 & U6 & U7 & U8 & U9
-  L --- U10 & U11 & U14
-  L -. "is a" .-> T
-  A --- U10 & U11 & U12 & U13 & U14
-  M --- U14 & U11
-  M -. "is a" .-> A
-  S --- U17 & U16
-  U2 -. "include" .-> U15
-  U2 -. "include" .-> U16
+  E --- U1 &amp; U2 &amp; U3 &amp; U4 &amp; U5
+  T --- U1 &amp; U6 &amp; U7 &amp; U8 &amp; U9
 </pre>
-<div class="cap">Figure 4.1 – Actors and use cases (generalisation: Team Lead is a Technician, IT Manager is an Administrator)</div>
+<div class="cap">Figure 4.1a – Employee and technician use cases</div>
+</div>
+<div class="figure">
+<pre class="mermaid">
+flowchart LR
+  L(("👤 Team Lead<br/>(is a Technician)"))
+  A(("👤 Administrator"))
+  M(("👤 IT Manager<br/>(is an Administrator)"))
+  S(("⏱ SLA Monitor"))
+  subgraph SYS2["I-ITSM – supervision, administration and automation"]
+    U10(["Assign / reassign<br/>(recommendations)"])
+    U11(["Monitor incidents<br/>&amp; SLA"])
+    U12(["Manage users<br/>&amp; technicians"])
+    U13(["Configure services,<br/>SLA, strategies"])
+    U14(["Reports &amp;<br/>audit log"])
+    U15(["Detect duplicates<br/>&amp; correlate"])
+    U16(["Send<br/>notifications"])
+    U17(["Escalate<br/>incident"])
+  end
+  L --- U10 &amp; U11 &amp; U14
+  A --- U10 &amp; U11 &amp; U12 &amp; U13 &amp; U14
+  M --- U11 &amp; U14
+  S --- U17 &amp; U16 &amp; U15
+</pre>
+<div class="cap">Figure 4.1b – Supervision, administration and system use cases ("Report incident" includes duplicate detection and notifications)</div>
 </div>
 
 <h2>4.2 Class diagram – users (inheritance, polymorphism, factory)</h2>
@@ -327,35 +334,72 @@ classDiagram
 <div class="figure">
 <pre class="mermaid">
 classDiagram
+  direction LR
   class Incident {
     -state: IncidentState
     -sla: SlaTracker
     -data: IncidentData
     -pendingEvents: DomainEvent[]
     +create(id, input)$ Incident
-    +fromSnapshot(s)$ Incident
-    +classify(code, actor, confidence) void
-    +applyPriority(assessment, actor) boolean
-    +attachSla(policy, actor) void
-    +assignTo(tech, actor, reason) void
-    +acknowledge(actor) void
-    +startWork(actor) void
-    +addNote(actor, text, type) WorkNote
-    +requestInfo(actor, question) void
-    +provideInfo(actor, answer) void
-    +resolve(actor, summary, rootCause) void
-    +verify(actor) void
-    +reopen(actor, reason) void
-    +close(actor, code) void
-    +submitFeedback(actor, rating, comment) void
-    +escalate(level, target, reason, actor) void
-    +linkRelated(ids, actor, reason, dup) void
-    +flagSlaWarning() boolean
-    +flagSlaBreaches() boolean
-    +slaStatus(now) SlaStatus
-    +availableActions() IncidentAction[]
+    +classify(code, actor)
+    +applyPriority(assessment, actor)
+    +assignTo(tech, actor, reason)
+    +acknowledge(actor)
+    +requestInfo(actor, question)
+    +resolve(actor, summary, rootCause)
+    +close(actor, code)
+    +submitFeedback(actor, rating, comment)
+    +escalate(level, target, reason)
     +pullEvents() DomainEvent[]
   }
+  class SlaTracker {
+    -resolutionDueAt: Date
+    +markResolved(at) void
+    +pause(at) / resume(at)
+    +status(now) SlaStatus
+  }
+  class WorkNote {
+    +type: NoteType
+    +text: string
+  }
+  class Resolution {
+    +summary: string
+    +rootCause: string
+  }
+  class Feedback {
+    +rating: number
+    +comment: string
+  }
+  class IncidentState {
+    &lt;&lt;abstract&gt;&gt;
+    +next(action) IncidentState
+  }
+  class ItService {
+    +businessCriticality: Level
+    +dependsOn: string[]
+  }
+  class Category {
+    +code: string
+    +keywords: string[]
+  }
+  class Employee
+  class Technician
+  Incident *-- SlaTracker : owns 0..1
+  Incident *-- WorkNote : owns 0..*
+  Incident *-- Resolution : owns 0..1
+  Incident *-- Feedback : owns 0..1
+  Incident --> IncidentState : current state
+  Incident --> ItService : affects 1
+  Incident --> Category : classified as 0..1
+  Incident --> Employee : reported by 1
+  Incident --> Technician : assigned to 0..1
+</pre>
+<div class="cap">Figure 4.3a – Incident aggregate. Filled diamonds = composition (owned, same life-cycle); arrows = association by id. The SlaTracker is built from an SlaPolicy; an ItService aggregates the services it depends on.</div>
+</div>
+<div class="figure">
+<pre class="mermaid">
+classDiagram
+  direction LR
   class IncidentState {
     &lt;&lt;abstract&gt;&gt;
     +status: IncidentStatus
@@ -372,48 +416,13 @@ classDiagram
   class AssignedState
   class AcknowledgedState
   class InProgressState
-  class PendingInfoState
+  class PendingInfoState {
+    +slaClockRunning() false
+  }
   class ResolvedState
   class VerifiedState
-  class ClosedState
-  class IncidentStates {
-    -registry: Map$
-    +of(status)$ IncidentState
-    +transitionTable()$ Row[]
-  }
-  class SlaTracker {
-    -responseDueAt: Date
-    -resolutionDueAt: Date
-    -respondedAt: Date
-    -resolvedAt: Date
-    -pausedAt: Date
-    +start(policy, at)$ SlaTracker
-    +markResponded(at) void
-    +markResolved(at) void
-    +pause(at) void
-    +resume(at) void
-    +elapsedFraction(now) number
-    +status(now) SlaStatus
-  }
-  class WorkNote
-  class Resolution
-  class Feedback
-  class SlaPolicy {
-    +priority: Priority
-    +serviceId: string
-    +responseMinutes: number
-    +resolutionMinutes: number
-    +warningThresholdPct: number
-  }
-  class ItService {
-    +id: string
-    +businessCriticality: Level
-    +userBase: number
-    +dependsOn: string[]
-  }
-  class Category {
-    +code: string
-    +keywords: string[]
+  class ClosedState {
+    +isActive() false
   }
   IncidentState &lt;|-- NewState
   IncidentState &lt;|-- ClassifiedState
@@ -424,84 +433,67 @@ classDiagram
   IncidentState &lt;|-- ResolvedState
   IncidentState &lt;|-- VerifiedState
   IncidentState &lt;|-- ClosedState
-  IncidentStates o-- IncidentState : flyweights
-  Incident --> IncidentState : current state
-  Incident *-- "0..1" SlaTracker
-  Incident *-- "*" WorkNote
-  Incident *-- "0..1" Resolution
-  Incident *-- "0..1" Feedback
-  SlaTracker ..> SlaPolicy : built from
-  Incident --> "1" ItService : affects
-  Incident --> "0..1" Category : classified as
-  Incident --> "1" Employee : reported by
-  Incident --> "0..1" Technician : assigned to
-  ItService o-- "*" ItService : depends on
 </pre>
-<div class="cap">Figure 4.3 – Incident aggregate. Filled diamonds = composition (life-cycle owned), hollow = aggregation, arrows = association.</div>
+<div class="cap">Figure 4.3b – State pattern: one class per lifecycle state. The stateless state objects are shared through the <code>IncidentStates</code> registry (flyweight).</div>
 </div>
 
 <h2>4.4 Class diagram – strategies (Strategy + Template Method)</h2>
 <div class="figure">
 <pre class="mermaid">
 classDiagram
-  class PriorityStrategy {
-    &lt;&lt;interface&gt;&gt;
-    +key: string
-    +calculate(input: PriorityInput) PriorityAssessment
-  }
-  class WeightedPriorityStrategy
-  class MatrixPriorityStrategy
   class PriorityCalculator {
     -strategies: Map
     -activeKey: string
     +use(key) void
     +calculate(input) PriorityAssessment
   }
-  PriorityStrategy &lt;|.. WeightedPriorityStrategy
-  PriorityStrategy &lt;|.. MatrixPriorityStrategy
-  PriorityCalculator o-- PriorityStrategy
-
-  class AssignmentStrategy {
+  class PriorityStrategy {
     &lt;&lt;interface&gt;&gt;
     +key: string
-    +rank(ctx, candidates) RankedCandidate[]
-    +select(ctx, candidates) RankedCandidate
+    +calculate(input) PriorityAssessment
   }
-  class AbstractAssignmentStrategy {
-    &lt;&lt;abstract&gt;&gt;
-    +select(ctx, candidates) RankedCandidate
-    +rank(ctx, candidates) RankedCandidate[]
-    #filterEligible(ctx, candidates) TechnicianCandidate[]
-    #order(ctx, eligible)* RankedCandidate[]
-  }
-  class SkillBasedStrategy
-  class LoadBasedStrategy
-  class RoundRobinStrategy {
-    -lastAssignedId: string
-  }
-  class SmartAssignmentStrategy
+  class WeightedPriorityStrategy
+  class MatrixPriorityStrategy
+  PriorityCalculator o-- PriorityStrategy
+  PriorityStrategy &lt;|.. WeightedPriorityStrategy
+  PriorityStrategy &lt;|.. MatrixPriorityStrategy
+</pre>
+<div class="cap">Figure 4.4a – Priority algorithms (Strategy)</div>
+</div>
+<div class="figure">
+<pre class="mermaid">
+classDiagram
   class AssignmentStrategyRegistry {
-    -strategies: Map
     -activeKey: string
     +use(key) void
     +active() AssignmentStrategy
   }
-  class TechnicianCandidate {
-    +technician: Technician
-    +activeWorkload: number
-    +resolvedForService: number
+  class AssignmentStrategy {
+    &lt;&lt;interface&gt;&gt;
+    +rank(ctx, candidates)
+    +select(ctx, candidates)
   }
-  AssignmentStrategy &lt;|.. AbstractAssignmentStrategy
-  AbstractAssignmentStrategy &lt;|-- SkillBasedStrategy
-  AbstractAssignmentStrategy &lt;|-- LoadBasedStrategy
-  AbstractAssignmentStrategy &lt;|-- RoundRobinStrategy
-  AbstractAssignmentStrategy &lt;|-- SmartAssignmentStrategy
+  class AbstractAssignmentStrategy {
+    &lt;&lt;abstract&gt;&gt;
+    +select(ctx, candidates)
+    #filterEligible(ctx, candidates)
+    #order(ctx, eligible)*
+  }
+  class SkillBased
+  class LoadBased
+  class RoundRobin
+  class Smart
   AssignmentStrategyRegistry o-- AssignmentStrategy
-  AssignmentStrategy ..> TechnicianCandidate
+  AssignmentStrategy &lt;|.. AbstractAssignmentStrategy
+  AbstractAssignmentStrategy &lt;|-- SkillBased
+  AbstractAssignmentStrategy &lt;|-- LoadBased
+  AbstractAssignmentStrategy &lt;|-- RoundRobin
+  AbstractAssignmentStrategy &lt;|-- Smart
 </pre>
-<div class="cap">Figure 4.4 – Interchangeable algorithms selected at runtime by the administrator.</div>
+<div class="cap">Figure 4.4b – Technician assignment (Strategy + Template Method). Class names shortened: SkillBasedStrategy, LoadBasedStrategy, RoundRobinStrategy, SmartAssignmentStrategy.</div>
 </div>
 
+<div class="landscape">
 <h2>4.5 Class diagram – events, notifications (Observer, Factory, Adapter)</h2>
 <div class="figure">
 <pre class="mermaid">
@@ -513,28 +505,49 @@ classDiagram
   }
   class EventSubscriber {
     &lt;&lt;interface&gt;&gt;
-    +name: string
     +interestedIn(type) boolean
     +handle(event) void
   }
   class AuditTrailSubscriber
   class NotificationSubscriber
   class RealtimeSubscriber
+  class AuditRepository {
+    &lt;&lt;interface&gt;&gt;
+    +append(record) void
+  }
   class NotificationService {
-    +notify(event, recipients) NotificationRecord[]
+    +notify(event, recipients)
+  }
+  class RealtimeHub {
+    +sendToUser(id, event, data)
+    +broadcast(event, data)
+  }
+  EventBus o-- EventSubscriber
+  EventSubscriber &lt;|.. AuditTrailSubscriber
+  EventSubscriber &lt;|.. NotificationSubscriber
+  EventSubscriber &lt;|.. RealtimeSubscriber
+  AuditTrailSubscriber --> AuditRepository
+  NotificationSubscriber --> NotificationService
+  RealtimeSubscriber --> RealtimeHub
+</pre>
+<div class="cap">Figure 4.5a – Observer: the incident workflow only publishes events; audit, notifications and the live dashboard react independently.</div>
+</div>
+<div class="figure">
+<pre class="mermaid">
+classDiagram
+  class NotificationService {
+    +notify(event, recipients)
   }
   class NotificationFactory {
-    +createChannel(type) NotificationChannel
-    +createMessage(event, recipient) NotificationMessage
+    +createChannel(type)
+    +createMessage(event, recipient)
   }
   class ChannelSelectionPolicy {
     &lt;&lt;interface&gt;&gt;
-    +channelsFor(type, priority) ChannelType[]
+    +channelsFor(type, priority)
   }
-  class PriorityBasedChannelPolicy
   class NotificationChannel {
     &lt;&lt;interface&gt;&gt;
-    +type: ChannelType
     +deliver(message) DeliveryResult
   }
   class InAppChannel
@@ -544,27 +557,15 @@ classDiagram
     &lt;&lt;interface&gt;&gt;
     +send(message) void
   }
-  class GmailSmtpAdapter {
-    -transporter: nodemailer.Transporter
-  }
+  class GmailSmtpAdapter
   class ConsoleEmailAdapter
   class SmsGateway {
     &lt;&lt;interface&gt;&gt;
     +send(phone, text) void
   }
   class SimulatedSmsGateway
-  class RealtimeHub {
-    +sendToUser(id, event, data) void
-    +broadcast(event, data) void
-  }
-  EventBus o-- EventSubscriber
-  EventSubscriber &lt;|.. AuditTrailSubscriber
-  EventSubscriber &lt;|.. NotificationSubscriber
-  EventSubscriber &lt;|.. RealtimeSubscriber
-  NotificationSubscriber --> NotificationService
   NotificationService --> NotificationFactory
   NotificationService --> ChannelSelectionPolicy
-  ChannelSelectionPolicy &lt;|.. PriorityBasedChannelPolicy
   NotificationService o-- NotificationChannel
   NotificationChannel &lt;|.. InAppChannel
   NotificationChannel &lt;|.. EmailChannel
@@ -574,10 +575,9 @@ classDiagram
   EmailGateway &lt;|.. ConsoleEmailAdapter
   SmsChannel --> SmsGateway
   SmsGateway &lt;|.. SimulatedSmsGateway
-  InAppChannel --> RealtimeHub
-  RealtimeSubscriber --> RealtimeHub
 </pre>
-<div class="cap">Figure 4.5 – Adding a new mechanism (e.g. Microsoft Teams) = one class implementing <code>NotificationChannel</code> + one line in the factory.</div>
+<div class="cap">Figure 4.5b – Factory + Adapter: a new mechanism (e.g. Microsoft Teams) = one class implementing <code>NotificationChannel</code> + one line in the factory; GmailSmtpAdapter wraps nodemailer. Default policy: PriorityBasedChannelPolicy.</div>
+</div>
 </div>
 
 <h2>4.6 Class diagram – persistence (Repository, generics, Specification)</h2>
@@ -588,7 +588,7 @@ classDiagram
     &lt;&lt;interface&gt;&gt;
     +findById(id) T
     +findAll() T[]
-    +save(entity: T) T
+    +save(entity) T
     +delete(id) boolean
   }
   class IncidentRepository {
@@ -598,80 +598,54 @@ classDiagram
     +activeWorkload() Map
     +nextId() string
   }
-  class UserRepository {
-    &lt;&lt;interface&gt;&gt;
-    +findByEmail(email) User
-    +findByRoles(roles) User[]
-  }
   class MongoRepository~T,S~ {
     &lt;&lt;abstract&gt;&gt;
-    #model: Model
-    #toDomain(s: S)* T
-    #toSnapshot(e: T)* S
+    #toDomain(s)* T
+    #toSnapshot(e)* S
   }
   class InMemoryRepository~T,S~ {
     &lt;&lt;abstract&gt;&gt;
-    #rows: Map
-    #toDomain(s: S)* T
-    #toSnapshot(e: T)* S
+    #toDomain(s)* T
+    #toSnapshot(e)* S
   }
   class MongoIncidentRepository
-  class MongoUserRepository
   class InMemoryIncidentRepository
-  class InMemoryUserRepository
   class IncidentSpecification {
-    -criteria: IncidentSearchCriteria
-    +isSatisfiedBy(incident, now) boolean
+    +isSatisfiedBy(incident) boolean
     +apply(list) Page
   }
   Repository &lt;|-- IncidentRepository
-  Repository &lt;|-- UserRepository
   Repository &lt;|.. MongoRepository
   Repository &lt;|.. InMemoryRepository
   MongoRepository &lt;|-- MongoIncidentRepository
-  MongoRepository &lt;|-- MongoUserRepository
   InMemoryRepository &lt;|-- InMemoryIncidentRepository
-  InMemoryRepository &lt;|-- InMemoryUserRepository
   IncidentRepository &lt;|.. MongoIncidentRepository
   IncidentRepository &lt;|.. InMemoryIncidentRepository
-  UserRepository &lt;|.. MongoUserRepository
-  UserRepository &lt;|.. InMemoryUserRepository
   MongoIncidentRepository ..> IncidentSpecification
   InMemoryIncidentRepository ..> IncidentSpecification
 </pre>
-<div class="cap">Figure 4.6 – Same interfaces for ServiceRepository, CategoryRepository, SlaPolicyRepository, AuditRepository, NotificationRepository, SettingsRepository.</div>
+<div class="cap">Figure 4.6 – Repository pattern with generics. Users, services, categories, SLA policies, audit, notifications and settings follow the same structure.</div>
 </div>
 
 <h2>4.7 Class diagram – application services and exception hierarchy</h2>
 <div class="figure">
 <pre class="mermaid">
 classDiagram
+  direction LR
   class IncidentService {
-    +analyzeDraft(input) Analysis
-    +create(user, input) Result
-    +search(user, criteria) Page
-    +assign(user, id, techId) View
-    +acknowledge(user, id) View
-    +resolve(user, id, summary, cause) View
-    +close(user, id) View
-    +related(user, id) Related
-    +recommendTechnicians(user, id) Ranking
-  }
-  class IncidentAccessPolicy {
-    +canView(u, i) boolean
-    +assertAssignee(u, i) void
-    +assertCanAssign(u) void
-    +permittedActions(u, i) UserAction[]
-  }
-  class SlaService {
-    +resolvePolicy(serviceId, priority) SlaPolicy
+    +analyzeDraft(input)
+    +create(user, input)
+    +search(user, criteria)
+    +assign(user, id, techId)
+    +acknowledge(user, id)
+    +resolve(user, id, summary, cause)
+    +close(user, id)
+    +related(user, id)
+    +recommendTechnicians(user, id)
   }
   class SlaMonitor {
     +start(intervalMs) void
     +runOnce() MonitorRunResult
-  }
-  class EscalationService {
-    +evaluate(incident) boolean
   }
   IncidentService --> IncidentAccessPolicy
   IncidentService --> PriorityCalculator
@@ -681,48 +655,40 @@ classDiagram
   IncidentService --> DuplicateDetector
   IncidentService --> ResolutionRecommender
   IncidentService --> CorrelationEngine
-  IncidentService --> EventBus
   IncidentService --> Repositories
+  IncidentService --> EventBus
   SlaMonitor --> EscalationService
   SlaMonitor --> EventBus
-
+</pre>
+<div class="cap">Figure 4.7a – Application services and their collaborators (all injected by the composition root).</div>
+</div>
+<div class="figure">
+<pre class="mermaid">
+classDiagram
+  direction LR
   class AppError {
     &lt;&lt;abstract&gt;&gt;
     +httpStatus*: number
     +code*: string
   }
-  class ValidationError
-  class InvalidCredentialsError
-  class AuthenticationError
-  class AuthorizationError
-  class NotFoundError
-  class IncidentNotFoundError
-  class ServiceNotFoundError
-  class ConflictError
-  class InvalidStateTransitionError
-  class TechnicianUnavailableError
-  class WorkloadExceededError
-  class DuplicateIncidentError
-  class SlaConfigurationError
-  class DatabaseError
-  class ExternalServiceError
   AppError &lt;|-- ValidationError
   AppError &lt;|-- InvalidCredentialsError
   AppError &lt;|-- AuthenticationError
   AppError &lt;|-- AuthorizationError
   AppError &lt;|-- NotFoundError
+  AppError &lt;|-- ConflictError
+  AppError &lt;|-- SlaConfigurationError
+  AppError &lt;|-- DatabaseError
+  AppError &lt;|-- ExternalServiceError
   NotFoundError &lt;|-- IncidentNotFoundError
   NotFoundError &lt;|-- ServiceNotFoundError
-  AppError &lt;|-- ConflictError
+  NotFoundError &lt;|-- UserNotFoundError
   ConflictError &lt;|-- InvalidStateTransitionError
   ConflictError &lt;|-- TechnicianUnavailableError
   ConflictError &lt;|-- WorkloadExceededError
   ConflictError &lt;|-- DuplicateIncidentError
-  AppError &lt;|-- SlaConfigurationError
-  AppError &lt;|-- DatabaseError
-  AppError &lt;|-- ExternalServiceError
 </pre>
-<div class="cap">Figure 4.7 – Services depend on abstractions; errors map themselves to HTTP status codes.</div>
+<div class="cap">Figure 4.7b – Exception hierarchy: every error maps itself to an HTTP status code (polymorphism).</div>
 </div>
 
 <h2>4.8 State machine diagram – incident lifecycle</h2>
@@ -751,7 +717,8 @@ stateDiagram-v2
 <div class="cap">Figure 4.8 – Every arrow is an entry in a concrete state class; anything else throws <code>InvalidStateTransitionError</code>.</div>
 </div>
 
-<h2>4.9 Sequence diagram – Workflow 1: report → prioritise → assign → notify</h2>
+<div class="landscape">
+<h2>4.9 Sequence diagrams – Workflow 1: report → prioritise → assign → notify</h2>
 <div class="figure">
 <pre class="mermaid">
 sequenceDiagram
@@ -759,36 +726,48 @@ sequenceDiagram
   participant UI as React UI
   participant API as Express API
   participant IS as IncidentService
+  participant R as IncidentRepository
+  participant BUS as EventBus
+  participant OBS as Observers
+  Emp->>UI: fill form
+  UI->>API: POST /incidents + JWT
+  API->>API: validate, authenticate
+  API->>IS: create(user, input)
+  IS->>IS: pipeline (Fig. 4.9b)
+  IS->>R: save(incident)
+  IS->>BUS: publishAll(events)
+  BUS->>OBS: audit, notify, push
+  OBS-->>Emp: in-app + e-mail
+  OBS-->>UI: SSE to technician
+  API-->>UI: 201 Created
+</pre>
+<div class="cap">Figure 4.9a – Request handling: from the form to the observers.</div>
+</div>
+<div class="figure">
+<pre class="mermaid">
+sequenceDiagram
+  participant IS as IncidentService
   participant INC as Incident
   participant CLF as CategoryClassifier
   participant PC as PriorityCalculator
   participant SLA as SlaService
   participant DD as DuplicateDetector
   participant AS as AssignmentStrategy
-  participant R as IncidentRepository
-  participant BUS as EventBus
-  participant OBS as Observers
-  Emp->>UI: fill form (live analysis)
-  UI->>API: POST /api/incidents (JWT)
-  API->>IS: create(user, input)
   IS->>INC: Incident.create()
-  IS->>CLF: suggest(text, categories)
+  IS->>CLF: suggest(text)
+  CLF-->>IS: APPLICATION (94%)
   IS->>INC: classify(code)
-  IS->>PC: calculate(impact, urgency, criticality, users)
+  IS->>PC: calculate(I, U, C, users)
+  PC-->>IS: P1 (score 95)
   IS->>INC: applyPriority(P1)
   IS->>SLA: resolvePolicy(service, P1)
   IS->>INC: attachSla(policy)
-  IS->>DD: findDuplicates(draft, open incidents)
+  IS->>DD: findDuplicates(draft)
   IS->>AS: select(context, candidates)
   IS->>INC: assignTo(technician)
-  IS->>R: save(incident)
-  IS->>BUS: publishAll(incident.pullEvents())
-  BUS->>OBS: AuditTrail / Notifications / Realtime
-  OBS-->>Emp: in-app + e-mail receipt
-  OBS-->>UI: SSE push to technician (toast, SMS if P1)
-  API-->>UI: 201 incident, duplicates, assignment
 </pre>
-<div class="cap">Figure 4.9 – Creation sequence.</div>
+<div class="cap">Figure 4.9b – Inside <code>IncidentService.create()</code>: classification, priority, SLA, duplicates and assignment.</div>
+</div>
 </div>
 
 <!-- ====================================================================== -->
@@ -962,112 +941,134 @@ Rule overrides: Impact 4 on criticality-4 service ⇒ P1;  ≥500 users ⇒ at l
 <!-- ====================================================================== -->
 <h1>12. Database Design</h1>
 <h2>12.1 ER diagram</h2>
-<div class="figure">
+<div class="figure landscape">
 <pre class="mermaid">
 erDiagram
-  USERS ||--o{ INCIDENTS : "reports (reporterId)"
-  USERS |o--o{ INCIDENTS : "is assigned (assignedTechnicianId)"
-  SERVICES ||--o{ INCIDENTS : "affected (serviceId)"
-  CATEGORIES |o--o{ INCIDENTS : "classifies (categoryCode)"
-  SERVICES |o--o{ SLA_POLICIES : "overrides (serviceId, null = default)"
-  SERVICES }o--o{ SERVICES : "dependsOn"
-  INCIDENTS ||--o{ AUDIT_RECORDS : "history (incidentId)"
-  USERS ||--o{ AUDIT_RECORDS : "performed (userId)"
-  USERS ||--o{ NOTIFICATIONS : "receives (userId)"
-  INCIDENTS |o--o{ NOTIFICATIONS : "about (incidentId)"
-  INCIDENTS }o--o{ INCIDENTS : "relatedIncidentIds / duplicateOfId"
+  USERS ||--o{ INCIDENTS : reports
+  USERS |o--o{ INCIDENTS : "assigned to"
+  SERVICES ||--o{ INCIDENTS : affects
+  CATEGORIES |o--o{ INCIDENTS : classifies
+  SERVICES |o--o{ SLA_POLICIES : overrides
+  SERVICES }o--o{ SERVICES : "depends on"
+  INCIDENTS ||--o{ AUDIT_RECORDS : history
+  USERS ||--o{ AUDIT_RECORDS : performed
+  USERS ||--o{ NOTIFICATIONS : receives
+  INCIDENTS |o--o{ NOTIFICATIONS : about
+  INCIDENTS }o--o{ INCIDENTS : "related / duplicate"
   USERS {
-    string _id PK "E1001, T1003, A1001"
-    string name
+    string _id PK
     string email UK
-    string passwordHash
     string role
-    string phone
-    string department
-    boolean active
-    string_array skills "technicians"
-    int maxWorkload
-    int experienceYears
-    boolean available
   }
   INCIDENTS {
-    string _id PK "INC1037"
-    string title
-    string description
+    string _id PK
     string reporterId FK
+    string assignedTechnicianId FK
     string serviceId FK
     string categoryCode FK
-    int impact
-    int urgency
-    int businessCriticality
-    int affectedUsers
-    string priority
-    int priorityScore
-    string status
-    string assignedTechnicianId FK
-    object sla "embedded SlaTracker"
-    array notes "embedded WorkNotes"
-    object resolution
-    object closure
-    object feedback
-    int escalationLevel
-    date createdAt
   }
   SERVICES {
-    string _id PK "SVC-PAY"
-    string name
-    int businessCriticality
-    int userBase
-    string_array dependsOn
-    boolean active
+    string _id PK
+    string_array dependsOn FK
   }
   CATEGORIES {
-    string _id PK "NETWORK"
-    string name
-    string_array keywords
-    boolean active
+    string _id PK
   }
   SLA_POLICIES {
     string _id PK
-    string priority
     string serviceId FK
-    int responseMinutes
-    int resolutionMinutes
-    int warningThresholdPct
-    boolean active
   }
   AUDIT_RECORDS {
     string _id PK
-    date timestamp
-    string userId FK
-    string action
     string incidentId FK
-    string previousState
-    string newState
-    string description
+    string userId FK
   }
   NOTIFICATIONS {
     string _id PK
     string userId FK
-    string channel
-    string eventType
     string incidentId FK
-    string title
-    string status
-    boolean read
-    date createdAt
   }
 </pre>
-<div class="cap">Figure 12.1 – Collections and relationships (also: <code>settings</code> key/value, <code>counters</code> for readable ids)</div>
+<div class="cap">Figure 12.1 – Collections, keys and relationships (full fields in Section 12.2; also <code>settings</code> key/value and <code>counters</code> for readable ids)</div>
 </div>
-<h2>12.2 Schema decisions</h2>
+<h2>12.2 Collection schemas</h2>
+<div class="two">
+<table>
+<tr><th colspan="2">users</th></tr>
+<tr><td><code>_id</code></td><td>PK, readable id (E1001, T1003, A1001)</td></tr>
+<tr><td><code>name, email</code></td><td>email unique, lower-case</td></tr>
+<tr><td><code>passwordHash</code></td><td>bcrypt hash (never returned)</td></tr>
+<tr><td><code>role</code></td><td>EMPLOYEE · TECHNICIAN · TEAM_LEAD · ADMIN · MANAGER</td></tr>
+<tr><td><code>phone, department, active, createdAt</code></td><td>profile and status</td></tr>
+<tr><td><code>skills[], maxWorkload, experienceYears, available</code></td><td>technicians and team leads only</td></tr>
+</table>
+<table>
+<tr><th colspan="2">services</th></tr>
+<tr><td><code>_id</code></td><td>PK (SVC-PAY, SVC-DB …)</td></tr>
+<tr><td><code>name, description, ownerTeam</code></td><td>catalogue data</td></tr>
+<tr><td><code>businessCriticality</code></td><td>1–4, used by the priority algorithm</td></tr>
+<tr><td><code>userBase</code></td><td>size of the user population</td></tr>
+<tr><td><code>dependsOn[]</code></td><td>FK → services (dependency graph)</td></tr>
+<tr><td><code>active</code></td><td>retired services are hidden</td></tr>
+</table>
+</div>
+<table>
+<tr><th colspan="2">incidents (aggregate root – one document per incident)</th></tr>
+<tr><td><code>_id</code></td><td>PK, readable id (INC1037)</td></tr>
+<tr><td><code>title, description</code></td><td>text index for keyword search</td></tr>
+<tr><td><code>reporterId, reporterName</code></td><td>FK → users</td></tr>
+<tr><td><code>serviceId, categoryCode, categoryConfidence</code></td><td>FK → services, categories; AI confidence</td></tr>
+<tr><td><code>impact, urgency, businessCriticality, affectedUsers</code></td><td>priority inputs (1–4 scales)</td></tr>
+<tr><td><code>priority, priorityScore, priorityStrategy, priorityRationale[]</code></td><td>P1–P4 with explanation</td></tr>
+<tr><td><code>status</code></td><td>lifecycle state (indexed)</td></tr>
+<tr><td><code>assignedTechnicianId, assignedTechnicianName</code></td><td>FK → users</td></tr>
+<tr><td><code>sla</code></td><td>embedded SlaTracker: due dates, responded/resolved at, pause time, warning and breach flags</td></tr>
+<tr><td><code>notes[]</code></td><td>embedded work notes: type, author, text, time</td></tr>
+<tr><td><code>resolution, closure, feedback</code></td><td>embedded: summary + root cause; closed by/at; rating + comment</td></tr>
+<tr><td><code>escalationLevel, relatedIncidentIds[], duplicateOfId, reopenCount</code></td><td>intelligence and history</td></tr>
+<tr><td><code>createdAt, updatedAt</code></td><td>timestamps (indexed)</td></tr>
+</table>
+<div class="two">
+<table>
+<tr><th colspan="2">categories</th></tr>
+<tr><td><code>_id</code></td><td>PK, category code (NETWORK)</td></tr>
+<tr><td><code>name, description</code></td><td>display data</td></tr>
+<tr><td><code>keywords[]</code></td><td>feed the AI category classifier</td></tr>
+<tr><td><code>active</code></td><td>status</td></tr>
+</table>
+<table>
+<tr><th colspan="2">sla_policies</th></tr>
+<tr><td><code>_id, name</code></td><td>PK and display name</td></tr>
+<tr><td><code>priority</code></td><td>P1–P4</td></tr>
+<tr><td><code>serviceId</code></td><td>FK → services; null = default policy</td></tr>
+<tr><td><code>responseMinutes, resolutionMinutes</code></td><td>targets</td></tr>
+<tr><td><code>warningThresholdPct, active</code></td><td>warning point, status</td></tr>
+</table>
+<table>
+<tr><th colspan="2">audit_records</th></tr>
+<tr><td><code>_id, timestamp</code></td><td>PK, time (indexed)</td></tr>
+<tr><td><code>userId, userName, userRole</code></td><td>FK → users (actor)</td></tr>
+<tr><td><code>action</code></td><td>event type</td></tr>
+<tr><td><code>incidentId</code></td><td>FK → incidents</td></tr>
+<tr><td><code>previousState, newState, description</code></td><td>state change and text</td></tr>
+</table>
+<table>
+<tr><th colspan="2">notifications</th></tr>
+<tr><td><code>_id, createdAt</code></td><td>PK, time</td></tr>
+<tr><td><code>userId</code></td><td>FK → users (recipient)</td></tr>
+<tr><td><code>channel, status</code></td><td>IN_APP · EMAIL · SMS; delivered / sent / simulated / failed</td></tr>
+<tr><td><code>eventType, incidentId</code></td><td>FK → incidents</td></tr>
+<tr><td><code>title, message, severity, read</code></td><td>content and read flag</td></tr>
+</table>
+</div>
+<h2>12.3 Schema decisions</h2>
 <ul>
 <li><b>Embedding vs referencing</b>: SLA tracker, notes, resolution, closure and feedback are embedded in the incident (composition — they never exist alone, always read together). Users, services and categories are referenced by id (association — independent life-cycles). Audit records and notifications are separate collections because they grow without bound and are queried independently.</li>
 <li><b>Readable business ids</b> (INC1001, E1001, SVC-PAY) generated atomically via a <code>counters</code> collection (<code>findOneAndUpdate $inc</code>).</li>
 <li><b>Indexes</b>: incidents(status, priority, categoryCode, serviceId, assignedTechnicianId, reporterId, createdAt, text index on title+description); users(email unique, role); audit(timestamp, incidentId, userId, action); notifications(userId, createdAt).</li>
 <li>Workload is computed with an aggregation pipeline (<code>$match</code> active statuses → <code>$group</code> by technician), not stored, so it can never be inconsistent.</li>
 </ul>
-<h2>12.3 Sample data (seeded automatically)</h2>
+<h2>12.4 Sample data (seeded automatically)</h2>
 <table>
 <tr><th>Collection</th><th>Records</th><th>Examples</th></tr>
 <tr><td>users</td><td>11</td><td>E1001 Aarav Sharma (employee), T1003 Arjun Mehta (APPLICATION, SOFTWARE, AUTHENTICATION), T1006 Neha Kapoor (team lead), A1001 Suresh Pillai (admin), A1002 Anita Desai (IT manager)</td></tr>
@@ -1214,7 +1215,17 @@ Demo password for all accounts: Password@123  (employee@, technician@, teamlead@
 </table>
 
 <script>
-  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose', flowchart: { useMaxWidth: true }, class: { useMaxWidth: true }, er: { useMaxWidth: true } });
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    securityLevel: 'loose',
+    themeVariables: { fontSize: '16px' },
+    flowchart: { useMaxWidth: true, nodeSpacing: 30, rankSpacing: 40, padding: 8 },
+    class: { useMaxWidth: true },
+    state: { useMaxWidth: true },
+    er: { useMaxWidth: true, fontSize: 16 },
+    sequence: { useMaxWidth: true, actorMargin: 28, width: 120, height: 48, boxMargin: 8, messageMargin: 28, mirrorActors: false, actorFontSize: 15, messageFontSize: 15, noteFontSize: 14 },
+  });
 </script>
 </body>
 </html>
