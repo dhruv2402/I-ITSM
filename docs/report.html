@@ -14,6 +14,9 @@
   /* keep every diagram on one page */
   .figure pre.mermaid svg { max-height: 236mm; }
   .landscape .figure pre.mermaid svg { max-height: 160mm; }
+  /* figures sharing a landscape page with their section's text */
+  .landscape .arch-fig pre.mermaid svg { max-height: 116mm; }
+  .landscape .er-fig pre.mermaid svg { max-height: 146mm; }
   :root { --ink:#0f172a; --muted:#475569; --accent:#4338ca; --line:#cbd5e1; }
   body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; color: var(--ink); font-size: 10.5pt; line-height: 1.45; margin: 0; background: #fff; }
   h1 { font-size: 20pt; color: var(--accent); margin: 0 0 8px; page-break-before: always; border-bottom: 2px solid var(--accent); padding-bottom: 4px; }
@@ -181,23 +184,22 @@
 </ol>
 
 <!-- ====================================================================== -->
+<div class="landscape">
 <h1>3. System Architecture</h1>
 <p>We chose a <b>layered architecture</b> (the first option in the brief) deployed as a single Node.js process that serves both the REST API and the built React app, with MongoDB Atlas as a managed cloud database. Dependencies point inwards: controllers → application services → domain; infrastructure (MongoDB, SMTP, SSE) implements interfaces owned by the inner layers.</p>
-<div class="figure landscape">
+<div class="figure arch-fig">
 <pre class="mermaid">
 flowchart TB
   UI["React SPA - TypeScript<br/>Employee · Support · Admin portals"]
   MON["SlaMonitor + EscalationService<br/>background job, every 30 s"]
-  API["API layer<br/>Express router · zod validation<br/>JWT auth + RBAC · error handler"]
-  SVC["Application services<br/>Incident · Auth · User · Catalog<br/>Settings · Report · AccessPolicy"]
-  ALG["Strategies + intelligence<br/>priority · assignment · classifier<br/>duplicates · correlation · SLA risk"]
-  DOM["Domain model<br/>User hierarchy · Incident<br/>IncidentState · SlaTracker"]
+  API["API layer: Express router · zod validation<br/>JWT auth + RBAC · error handler"]
+  SVC["Application services<br/>Incident · Auth · User · Catalog · Settings · Report"]
+  ALG["Strategies + intelligence<br/>priority · assignment · AI features"]
+  DOM["Domain model<br/>User · Incident · IncidentState · SlaTracker"]
   REPO["Repository interfaces<br/>MongoDB / in-memory"]
   BUS["EventBus<br/>(Observer)"]
   DB[("MongoDB Atlas")]
-  OBS["Observers<br/>AuditTrail · Notifications<br/>RealtimeDashboard"]
-  MAIL["Gmail SMTP<br/>(Adapter)"]
-  SMS["SMS gateway<br/>(Adapter, simulated)"]
+  OBS["Observers: audit · notifications · realtime<br/>Adapters: Gmail SMTP · SMS (simulated)"]
   UI -- "REST / JSON + JWT" --> API
   API --> SVC
   SVC --> ALG
@@ -208,14 +210,13 @@ flowchart TB
   MON --> BUS
   REPO --> DB
   BUS --> OBS
-  OBS --> MAIL
-  OBS --> SMS
   OBS -. "Server-Sent Events" .-> UI
 </pre>
 <div class="cap">Figure 3.1 – Layered architecture and component interactions</div>
 </div>
 <h3>Request flow (example: report incident)</h3>
 <p>The React form calls <code>POST /api/incidents</code>. The router validates the body with zod, the auth middleware resolves the JWT to a <code>User</code> object, and <code>IncidentService.create</code> orchestrates: create <code>Incident</code> → classify → calculate priority (strategy) → attach SLA → detect duplicates → choose technician (strategy) → save (repository) → publish domain events. Observers then write the audit trail, send notifications (in-app via SSE, e-mail via Gmail adapter, SMS for critical events) and push a live refresh to all dashboards.</p>
+</div>
 
 <!-- ====================================================================== -->
 <h1>4. UML Diagrams</h1>
@@ -939,9 +940,10 @@ Rule overrides: Impact 4 on criticality-4 service ⇒ P1;  ≥500 users ⇒ at l
 </table>
 
 <!-- ====================================================================== -->
+<div class="landscape">
 <h1>12. Database Design</h1>
 <h2>12.1 ER diagram</h2>
-<div class="figure landscape">
+<div class="figure er-fig">
 <pre class="mermaid">
 erDiagram
   USERS ||--o{ INCIDENTS : reports
@@ -990,6 +992,7 @@ erDiagram
   }
 </pre>
 <div class="cap">Figure 12.1 – Collections, keys and relationships (full fields in Section 12.2; also <code>settings</code> key/value and <code>counters</code> for readable ids)</div>
+</div>
 </div>
 <h2>12.2 Collection schemas</h2>
 <div class="two">
