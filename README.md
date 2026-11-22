@@ -1,4 +1,4 @@
-# I-ITSM — Intelligent IT Service Management & Incident Resolution System
+# I-ITSM — Intelligent IT Service Management & Incident Resolution System (Gurveer Did No work)
 
 CS F213 / MAC F212 OOP project, Semester I 2026-27 — **Group 44**: Dhruv Chaudhary (2024B3A70624H), Nayan Sanjay Kasera (ID No. 2024B5A71012H), Gurveer Singh Gulati (2024B3A70627H), Sela Kartikeya (2024B4A70769H)
 
