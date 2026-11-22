@@ -7,7 +7,7 @@ File name for upload: **`44_OOP_S1_2026-2027_Project`** (the brief's example use
 | Dhruv Chaudhary | 2024B3A70624H | Domain model & OOP, design patterns, intelligent features |
 | Gurveer Singh Gulati | 2024B3A70627H | Backend REST API, security, SLA monitoring, testing |
 | Sela Kartikeya | 2024B4A70769H | Database (MongoDB Atlas), cloud deployment (Render) |
-| Nayan Sanjay Kasera | 2024B5A71012 | Frontend UI/UX, dashboards, real-time notifications |
+| Nayan Sanjay Kasera | 2024B5A71012H | Frontend UI/UX, dashboards, real-time notifications |
 
 ## Before recording (10 minutes)
 
